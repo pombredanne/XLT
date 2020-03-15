@@ -102,8 +102,10 @@ public class StringMatcher
     public boolean isAccepted(final String s)
     {
         // do not accept the string if it matches an exclude pattern
-        for (final Pattern pattern : excludePatterns)
+        for (int i = 0; i < excludePatterns.size(); i++)
         {
+            final Pattern pattern = excludePatterns.get(i);
+            
             final Matcher matcher = pattern.matcher(s);
             if (!fullMatch && matcher.find() || fullMatch && matcher.matches())
             {
@@ -118,8 +120,10 @@ public class StringMatcher
         }
 
         // do accept the string if it matches an include pattern
-        for (final Pattern pattern : includePatterns)
+        for (int i = 0; i < includePatterns.size(); i++)
         {
+            final Pattern pattern  = includePatterns.get(i);
+            
             final Matcher matcher = pattern.matcher(s);
             if (!fullMatch && matcher.find() || fullMatch && matcher.matches())
             {
