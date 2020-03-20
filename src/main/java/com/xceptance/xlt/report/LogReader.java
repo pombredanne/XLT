@@ -220,7 +220,12 @@ public class LogReader
             // wait for the data processing to finish
             dispatcher.waitForDataRecordProcessingToComplete();
 
-            System.out.printf("Data records read: %,d (%,d ms)\n", totalLinesCounter.get(), TimerUtils.getTime() - start);
+            final long duration = TimerUtils.getTime() - start;
+            final int durationInSeconds = Math.max(1, (int) (duration / 1000));
+            System.out.printf("Data records read: %,d (%,d ms) - (%,d lines/s)\n", 
+                              totalLinesCounter.get(), 
+                              duration,
+                              (int) (Math.floor(totalLinesCounter.get() / durationInSeconds)));
         }
         catch (final Exception e)
         {
