@@ -383,6 +383,16 @@
             <artifactId>activation</artifactId>
             <version>1.1.1</version>
         </dependency>
+        
+        <!--  
+            https://github.com/ctongfei/progressbar 
+            MIT license
+        -->
+        <dependency>
+            <groupId>me.tongfei</groupId>
+            <artifactId>progressbar</artifactId>
+            <version>0.8.1</version>
+        </dependency>
 
         <!-- ================= -->
         <!-- Test dependencies -->

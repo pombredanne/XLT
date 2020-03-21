@@ -231,7 +231,9 @@ public class ReportGenerator
             // clean output directory first -> Improvement #3243
             FileUtils.cleanDirectory(outputDir);
 
+            // read all log files and crunch the data
             readLogs(fromTime, toTime, duration, noRampUp, fromTimeRel, toTimeRel);
+            
             final File xmlReport = createReport(outputDir);
             transformReport(xmlReport, outputDir);
 
@@ -349,23 +351,24 @@ public class ReportGenerator
         return fromTime;
     }
 
+    /**
+     * Processing of the log files within a defined time range
+     * 
+     * @param fromTime start time of the period to report
+     * @param toTime end time of the period to report
+     */
     private void read(final long fromTime, final long toTime)
     {
         // setup data record factory
-        final DataRecordFactory statsFactory = new DataRecordFactory();
-
-        final Map<String, Class<? extends Data>> dataRecordClasses = config.getDataRecordClasses();
-        for (final Map.Entry<String, Class<? extends Data>> entry : dataRecordClasses.entrySet())
-        {
-            final String typeCode = entry.getKey();
-            final Class<? extends Data> c = entry.getValue();
-            statsFactory.registerStatisticsClass(c, typeCode);
-        }
+        final DataRecordFactory dataRecordFactory = new DataRecordFactory(config.getDataRecordClasses());
 
         // read the logs
-        final LogReader logReader = new LogReader(inputDir, statsFactory, fromTime, toTime, reportProviders, config.getRequestProcessingRules(),
-                                                  config.getThreadCount(), testCaseIncludePatternList, testCaseExcludePatternList,
-                                                  agentIncludePatternList, agentExcludePatternList, config.getRemoveIndexesFromRequestNames());
+        final DataProcessor logReader = new DataProcessor(inputDir, 
+                                                          dataRecordFactory, 
+                                                          fromTime, toTime,
+                                                          reportProviders, config.getRequestProcessingRules(),
+                                                          config.getThreadCount(), testCaseIncludePatternList, testCaseExcludePatternList,
+                                                          agentIncludePatternList, agentExcludePatternList, config.getRemoveIndexesFromRequestNames());
         logReader.readDataRecords();
 
         final long minTime = logReader.getMinimumTime();

@@ -16,12 +16,12 @@ import com.xceptance.xlt.api.report.ReportProvider;
  * Processes parsed data records. Processing means passing a data record to all configured report providers. Since data
  * processing is not thread-safe (yet), there will be only one data processor.
  */
-class DataRecordProcessor implements Runnable
+class StatisticsProcessor implements Runnable
 {
     /**
      * Class logger.
      */
-    private static final Log LOG = LogFactory.getLog(LogReader.class);
+    private static final Log LOG = LogFactory.getLog(StatisticsProcessor.class);
 
     /**
      * The dispatcher that coordinates result processing.
@@ -51,7 +51,7 @@ class DataRecordProcessor implements Runnable
      * @param dispatcher
      *            the dispatcher that coordinates result processing
      */
-    public DataRecordProcessor(final List<ReportProvider> reportProviders, final Dispatcher dispatcher)
+    public StatisticsProcessor(final List<ReportProvider> reportProviders, final Dispatcher dispatcher)
     {
         this.reportProviders = reportProviders.toArray(new ReportProvider[0]);
         this.dispatcher = dispatcher;
@@ -87,7 +87,7 @@ class DataRecordProcessor implements Runnable
     public void run()
     {
         // just a few threads are good enough
-        final ForkJoinPool pool = new ForkJoinPool(4);
+        final ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
 
         while (true)
         {

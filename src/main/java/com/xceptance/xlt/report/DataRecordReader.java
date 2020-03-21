@@ -16,19 +16,19 @@ import org.apache.commons.vfs2.FileType;
 import com.xceptance.xlt.common.XltConstants;
 
 /**
- * Reads lines from the test result files of a certain test user.
+ * Reads lines from the result files of a certain test user.
  */
 class DataRecordReader implements Runnable
 {
     /**
      * The maximum number of lines in a chunk.
      */
-    private static final int CHUNK_SIZE = 1000;
+    private static final int CHUNK_SIZE = 2000;
 
     /**
      * Class logger.
      */
-    private static final Log LOG = LogFactory.getLog(LogReader.class);
+    private static final Log LOG = LogFactory.getLog(DataRecordReader.class);
 
     /**
      * Maps the start time of an action to the action name. This data structure is defined here (as it is tied to a
@@ -180,7 +180,7 @@ class DataRecordReader implements Runnable
     private void readTimerLog(final FileObject file, final boolean collectActionNames, final boolean adjustTimerName)
     {
         // that costs a lot of time, no idea why... real async logger might be an option, LOG.info did not help
-        // System.out.printf("Reading file '%s' ...", file));
+        // System.out.printf("Reading file '%s' ...", file);
         // LOG.info(String.format("Reading file '%s' ...", file));
 
         try (final BufferedReader reader = new BufferedReader(new InputStreamReader(file.getContent().getInputStream(),

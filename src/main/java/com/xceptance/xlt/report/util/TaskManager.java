@@ -49,7 +49,7 @@ public class TaskManager
     /**
      * The default maximum count of threads, which is equal to the number of available CPUs on the current machine.
      */
-    public static final int DEFAULT_THREAD_COUNT = ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
+    public static final int DEFAULT_THREAD_COUNT = Runtime.getRuntime().availableProcessors();
 
     /**
      * Constructor.

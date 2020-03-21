@@ -8,6 +8,9 @@ import java.util.concurrent.Semaphore;
 import com.xceptance.common.util.SynchronizingCounter;
 import com.xceptance.xlt.api.engine.Data;
 
+import me.tongfei.progressbar.ProgressBar;
+import me.tongfei.progressbar.ProgressBarStyle;
+
 /**
  * The {@link Dispatcher} is responsible to coordinate the various reader/parser/processor threads involved when
  * processing test results. It does not only pass the results from one thread to another, but makes sure as well that no
@@ -15,35 +18,41 @@ import com.xceptance.xlt.api.engine.Data;
  *
  * @see DataRecordReader
  * @see DataRecordParser
- * @see DataRecordProcessor
+ * @see StatisticsProcessor
  */
 public class Dispatcher
 {
     /**
      * The number of directories that still need to be processed.
      */
-    private final SynchronizingCounter directoriesToBeProcessed;
+    private final SynchronizingCounter remainingDirectories = new SynchronizingCounter();
 
+    /**
+     * Total number of directories to be or already have been processed
+     */
+    private final SynchronizingCounter totalDirectories = new SynchronizingCounter();
+    
     /**
      * The number of chunks that still need to be processed.
      */
-    private final SynchronizingCounter chunksToBeProcessed;
-
-    /**
-     * The semaphore to limit the number of active threads.
-     */
-    private final Semaphore permits;
+    private final SynchronizingCounter chunksToBeProcessed = new SynchronizingCounter();
 
     /**
      * The line chunks waiting to be parsed.
      */
-    private final BlockingQueue<LineChunk> lineChunkQueue;
+    private final BlockingQueue<LineChunk> lineChunkQueue = new ArrayBlockingQueue<>(50);
 
     /**
-     * The data record chunks waiting to be processed.
+     * The data record chunks waiting to be send to the statistics providers.
      */
-    private final BlockingQueue<List<Data>> dataRecordChunkQueue;
+    private final BlockingQueue<List<Data>> dataRecordChunkQueue = new ArrayBlockingQueue<>(50);
 
+    
+    /**
+     * Our progress bar
+     */
+    private final ProgressBar progressBar = new ProgressBar("Reading", 100, ProgressBarStyle.ASCII);
+   
     /**
      * Creates a new {@link Dispatcher} object with the given thread limit.
      *
@@ -52,22 +61,26 @@ public class Dispatcher
      * @param maxActiveThreads
      *            the maximum number of active threads
      */
-    public Dispatcher(final SynchronizingCounter directoriesToBeProcessed, final int maxActiveThreads)
+    public Dispatcher()
     {
-        this.directoriesToBeProcessed = directoriesToBeProcessed;
-
-        permits = new Semaphore(maxActiveThreads);
-        chunksToBeProcessed = new SynchronizingCounter();
-        lineChunkQueue = new ArrayBlockingQueue<LineChunk>(10);
-        dataRecordChunkQueue = new ArrayBlockingQueue<List<Data>>(10);
     }
 
+    /**
+     * Count the directories to be processed up by one
+     */
+    public void incremementDirectoryCount()
+    {
+        totalDirectories.increment();
+        remainingDirectories.increment();
+    }
+    
     /**
      * Indicates that a reader thread is about to begin reading. Called by a reader thread.
      */
     public void beginReading() throws InterruptedException
     {
-        permits.acquire();
+        progressBar.maxHint(totalDirectories.get());
+        progressBar.step();
     }
 
     /**
@@ -79,10 +92,7 @@ public class Dispatcher
     public void addNewLineChunk(final LineChunk lineChunk) throws InterruptedException
     {
         chunksToBeProcessed.increment();
-
-        permits.release();
         lineChunkQueue.put(lineChunk);
-        permits.acquire();
     }
 
     /**
@@ -90,9 +100,8 @@ public class Dispatcher
      */
     public void finishedReading()
     {
-        directoriesToBeProcessed.decrement();
-
-        permits.release();
+        remainingDirectories.decrement();
+        progressBar.maxHint(totalDirectories.get());
     }
 
     /**
@@ -102,10 +111,8 @@ public class Dispatcher
      */
     public LineChunk getNextLineChunk() throws InterruptedException
     {
-        final LineChunk chunk = lineChunkQueue.take();
-        permits.acquire();
-
-        return chunk;
+        final LineChunk c = lineChunkQueue.take();
+        return c;
     }
 
     /**
@@ -116,7 +123,6 @@ public class Dispatcher
      */
     public void addNewParsedDataRecordChunk(final List<Data> dataRecordChunk) throws InterruptedException
     {
-        permits.release();
         dataRecordChunkQueue.put(dataRecordChunk);
     }
 
@@ -127,10 +133,8 @@ public class Dispatcher
      */
     public List<Data> getNextParsedDataRecordChunk() throws InterruptedException
     {
-        final List<Data> chunk = dataRecordChunkQueue.take();
-        permits.acquire();
-
-        return chunk;
+        final List<Data> data = dataRecordChunkQueue.take();
+        return data;
     }
 
     /**
@@ -139,8 +143,6 @@ public class Dispatcher
     public void finishedProcessing()
     {
         chunksToBeProcessed.decrement();
-
-        permits.release();
     }
 
     /**
@@ -151,9 +153,32 @@ public class Dispatcher
     public void waitForDataRecordProcessingToComplete() throws InterruptedException
     {
         // wait for the readers to complete
-        directoriesToBeProcessed.awaitZero();
+        remainingDirectories.awaitZero();
 
         // wait for the data processor thread to finish data record chunks
         chunksToBeProcessed.awaitZero();
+        
+        // stop progress
+        progressBar.close();
+    }
+    
+    /**
+     * Return the number of remaining directories
+     * 
+     * @return remaining directory to be processed
+     */
+    public int getRemainingDirectoryCount()
+    {
+        return remainingDirectories.get();
+    }
+    
+    /**
+     * Return the number of remaining or processed directory
+     * 
+     * @return total number of processed or to be processed directory
+     */
+    public int getTotalDirectoryCount()
+    {
+        return totalDirectories.get();
     }
 }

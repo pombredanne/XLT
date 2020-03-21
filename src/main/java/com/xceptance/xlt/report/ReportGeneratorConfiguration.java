@@ -48,11 +48,11 @@ public class ReportGeneratorConfiguration extends AbstractConfiguration implemen
      */
     public enum ChartScale
     {
-     /** A linear scale (default). */
-     LINEAR,
+        /** A linear scale (default). */
+        LINEAR,
 
-     /** A logarithmic scale (log10). */
-     LOGARITHMIC
+        /** A logarithmic scale (log10). */
+        LOGARITHMIC
     }
 
     /**
@@ -393,7 +393,7 @@ public class ReportGeneratorConfiguration extends AbstractConfiguration implemen
         chartsHeight = getIntProperty(PROP_CHARTS_HEIGHT, 300);
         movingAveragePoints = getIntProperty(PROP_CHARTS_MOV_AVG_PERCENTAGE, 5);
 
-        threadCount = getIntProperty(PROP_THREAD_COUNT, ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors());
+        threadCount = getIntProperty(PROP_THREAD_COUNT, Runtime.getRuntime().availableProcessors());
 
         removeIndexesFromRequestNames = getBooleanProperty(PROP_REMOVE_INDEXES_FROM_REQUEST_NAMES, false);
 
