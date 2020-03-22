@@ -84,9 +84,9 @@ public class CustomValue extends AbstractData
      * {@inheritDoc}
      */
     @Override
-    protected void parseValues(final String[] values)
+    protected void parseValues(final List<String> values)
     {
         super.parseValues(values);
-        value = Double.parseDouble(values[3]);
+        value = Double.parseDouble(values.get(3));
     }
 }

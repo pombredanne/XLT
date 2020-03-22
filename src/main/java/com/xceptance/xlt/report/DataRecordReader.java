@@ -23,7 +23,7 @@ class DataRecordReader implements Runnable
     /**
      * The maximum number of lines in a chunk.
      */
-    private static final int CHUNK_SIZE = 2000;
+    private static final int CHUNK_SIZE = 1000;
 
     /**
      * Class logger.

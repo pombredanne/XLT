@@ -267,12 +267,12 @@ public class TransactionData extends TimerData
      * {@inheritDoc}
      */
     @Override
-    protected void parseValues(final String[] values)
+    protected void parseValues(final List<String> values)
     {
         super.parseValues(values);
 
         // process the stack trace
-        stackTrace = values[5].trim();
+        stackTrace = values.get(5).trim();
         if (stackTrace.length() == 0)
         {
             stackTrace = null;
@@ -284,17 +284,17 @@ public class TransactionData extends TimerData
         }
 
         // be defensive so a report can be generated also for older results
-        final int length = values.length;
+        final int length = values.size();
         if (length > 6)
         {
-            setFailedActionName(values[6]);
+            setFailedActionName(values.get(6));
         }
 
         // test user number and directory name (since XLT 4.13.2)
         if (length > 7)
         {
-            setTestUserNumber(values[7]);
-            setDirectoryName(values[8]);
+            setTestUserNumber(values.get(7));
+            setDirectoryName(values.get(8));
         }
         else
         {

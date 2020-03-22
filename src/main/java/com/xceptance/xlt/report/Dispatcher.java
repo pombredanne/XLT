@@ -1,9 +1,8 @@
 package com.xceptance.xlt.report;
 
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import com.xceptance.common.util.SynchronizingCounter;
 import com.xceptance.xlt.api.engine.Data;
@@ -40,12 +39,12 @@ public class Dispatcher
     /**
      * The line chunks waiting to be parsed.
      */
-    private final BlockingQueue<LineChunk> lineChunkQueue = new ArrayBlockingQueue<>(50);
+    private final BlockingQueue<LineChunk> lineChunkQueue = new LinkedBlockingQueue<>(50);
 
     /**
      * The data record chunks waiting to be send to the statistics providers.
      */
-    private final BlockingQueue<List<Data>> dataRecordChunkQueue = new ArrayBlockingQueue<>(50);
+    private final BlockingQueue<List<Data>> dataRecordChunkQueue = new LinkedBlockingQueue<>(50);
 
     
     /**

@@ -609,37 +609,37 @@ public class RequestData extends TimerData
      * {@inheritDoc}
      */
     @Override
-    protected void parseValues(final String[] values)
+    protected void parseValues(final List<String> values)
     {
         super.parseValues(values);
 
-        setBytesSent(ParseNumbers.parseInt(values[5]));
-        setBytesReceived(ParseNumbers.parseInt(values[6]));
-        setResponseCode(ParseNumbers.parseInt(values[7]));
+        setBytesSent(ParseNumbers.parseInt(values.get(5)));
+        setBytesReceived(ParseNumbers.parseInt(values.get(6)));
+        setResponseCode(ParseNumbers.parseInt(values.get(7)));
 
-        if (values.length > 22)
+        if (values.size() > 22)
         {
-            url = values[8];
-            contentType = values[9];
+            url = values.get(8);
+            contentType = values.get(9);
 
-            setConnectTime(ParseNumbers.parseInt(values[10]));
-            setSendTime(ParseNumbers.parseInt(values[11]));
-            setServerBusyTime(ParseNumbers.parseInt(values[12]));
-            setReceiveTime(ParseNumbers.parseInt(values[13]));
-            setTimeToFirstBytes(ParseNumbers.parseInt(values[14]));
-            setTimeToLastBytes(ParseNumbers.parseInt(values[15]));
-            setRequestId(values[16]);
-            setHttpMethod(values[17]);
-            setFormDataEncoding(values[18]);
-            setFormData(values[19]);
-            setDnsTime(ParseNumbers.parseInt(values[20]));
-            ipAddresses = values[21];
-            setResponseId(values[22]);
+            setConnectTime(ParseNumbers.parseInt(values.get(10)));
+            setSendTime(ParseNumbers.parseInt(values.get(11)));
+            setServerBusyTime(ParseNumbers.parseInt(values.get(12)));
+            setReceiveTime(ParseNumbers.parseInt(values.get(13)));
+            setTimeToFirstBytes(ParseNumbers.parseInt(values.get(14)));
+            setTimeToLastBytes(ParseNumbers.parseInt(values.get(15)));
+            setRequestId(values.get(16));
+            setHttpMethod(values.get(17));
+            setFormDataEncoding(values.get(18));
+            setFormData(values.get(19));
+            setDnsTime(ParseNumbers.parseInt(values.get(20)));
+            ipAddresses = values.get(21);
+            setResponseId(values.get(21));
         }
         else
         {
-            // do legacy
-            parseLegacyValues(values);
+            // do legacy, translate to array because it does rarely happen
+            parseLegacyValues(values.toArray(new String[0]));
         }
     }
 

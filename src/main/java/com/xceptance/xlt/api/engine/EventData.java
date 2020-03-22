@@ -123,13 +123,13 @@ public class EventData extends AbstractData
      * {@inheritDoc}
      */
     @Override
-    protected void parseValues(final String[] values)
+    protected void parseValues(final List<String> values)
     {
         super.parseValues(values);
 
         // read and check the values
-        testCaseName = values[3];
-        message = values[4];
+        testCaseName = values.get(3);
+        message = values.get(4);
     }
 
     /**

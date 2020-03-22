@@ -126,18 +126,19 @@ public abstract class TimerData extends AbstractData
      * {@inheritDoc}
      */
     @Override
-    protected void parseValues(final String[] values)
+    protected void parseValues(final List<String> values)
     {
         super.parseValues(values);
 
         // read and check the values
-        runTime = ParseNumbers.parseLong(values[3]);
-        failed = Boolean.valueOf(values[4]);
+        runTime = ParseNumbers.parseLong(values.get(3));
 
         if (runTime < 0)
         {
             throw new IllegalArgumentException("Invalid value for the 'runtime' attribute.");
         }
+
+        failed = Boolean.valueOf(values.get(4));
     }
 
     /**
