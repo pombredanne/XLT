@@ -1,8 +1,5 @@
 package com.xceptance.xlt.report.providers;
 
-import gnu.trove.set.TIntSet;
-import gnu.trove.set.hash.TIntHashSet;
-
 import java.awt.Color;
 import java.io.File;
 import java.math.BigInteger;
@@ -19,12 +16,13 @@ import org.jfree.chart.plot.Marker;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.ui.Layer;
+import org.jfree.chart.ui.TextAnchor;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.xy.XYIntervalSeries;
 import org.jfree.data.xy.XYIntervalSeriesCollection;
-import org.jfree.chart.ui.Layer;
-import org.jfree.chart.ui.TextAnchor;
 
+import com.xceptance.common.lang.StringHasher;
 import com.xceptance.xlt.api.engine.Data;
 import com.xceptance.xlt.api.engine.RequestData;
 import com.xceptance.xlt.api.report.AbstractReportProvider;
@@ -36,6 +34,9 @@ import com.xceptance.xlt.report.util.ReportUtils;
 import com.xceptance.xlt.report.util.SegmentationValueSet;
 import com.xceptance.xlt.report.util.SummaryStatistics;
 import com.xceptance.xlt.report.util.TaskManager;
+
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
 
 /**
  * The {@link RequestDataProcessor} class provides common functionality of a typical data processor that deals with
@@ -285,17 +286,11 @@ public class RequestDataProcessor extends BasicTimerDataProcessor
 
         if (countDistinctUrls)
         {
-            String url = reqData.getUrl();
-
-            // first remove the hash/fragment from the URL if present
-            final int pos = url.indexOf('#');
-            if (pos > 0)
-            {
-                url = url.substring(0, pos);
-            }
+            final String url = reqData.getUrl();
+            final int hash = StringHasher.hashCodeWithLimit(url, '#');
 
             // store the URL's hash code only to save space
-            distinctUrlHashCodeSet.add(url.hashCode());
+            distinctUrlHashCodeSet.add(hash);
 
             // remember some URLs (up to the limit)
             if (distinctUrlSet.size() < MAXIMUM_NUMBER_OF_URLS)
