@@ -18,12 +18,6 @@ import com.xceptance.common.util.RegExUtils;
 public final class StringUtils
 {
     /**
-     * Cache for unifying strings.
-     */
-    private static final Map<String, WeakReference<String>> CACHE = Collections.synchronizedMap(new WeakHashMap<String, WeakReference<String>>(
-                                                                                                                                               1001));
-
-    /**
      * Returns the CRC32 checksum of the given string as string representation.
      * 
      * @param s
@@ -39,32 +33,6 @@ public final class StringUtils
 
         // return hash as string
         return Long.toString(hasher.getValue());
-    }
-
-    /**
-     * Alternative to {@link String#intern()}, which keeps the permgen space consumption low.
-     * 
-     * @param str
-     *            the String to intern
-     * @return the intern instance
-     */
-    public static String internString(final String str)
-    {
-        String result = null;
-
-        final WeakReference<String> ref = CACHE.get(str);
-        if (ref != null)
-        {
-            result = ref.get();
-        }
-        if (result == null)
-        {
-            // fill cache
-            CACHE.put(str, new WeakReference<String>(str));
-            result = str;
-        }
-
-        return result;
     }
 
     /**
