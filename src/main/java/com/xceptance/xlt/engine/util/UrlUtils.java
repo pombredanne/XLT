@@ -19,6 +19,10 @@ import com.xceptance.xlt.common.XltConstants;
  */
 public final class UrlUtils
 {
+    // just an int to know what to exclude cheaply when searching
+    private final static int MAX_CHAR = Math.max(Math.max('/', '?'), '#');
+
+    
     /**
      * Default constructor. Declared private to prevent external instantiation.
      */
@@ -209,5 +213,44 @@ public final class UrlUtils
         final org.apache.http.NameValuePair[] httpClientPairs = NameValuePair.toHttpClient(parameters);
         return URLEncodedUtils.format(Arrays.asList(httpClientPairs), XltConstants.UTF8_ENCODING);
     }
+    
+    /**
+     * Gets the host from a url as string as cheaply as possible. Does not pay attention to any special url formats
+     * or rules. Mainly meant for report processing 
+     * 
+     * @param url the url to retrieve the host name from
+     * @return the host name in the url or the full url if not host name can be identified
+     */
+    public static String retrieveHostFromUrl(final String url)
+    {
+        // strip protocol
+        int start = url.indexOf("://");
+        start = start == -1 ? 0 : start + 3;
 
+        // strip path/query/fragment if present (whatever comes first)
+        final int length = url.length();
+        for (int i = start; i < length; i++)
+        {
+            final char c = url.charAt(i);
+            
+            // avoid all three comparison by checking for a lot of
+            // not relevant chars first
+            if (c <= MAX_CHAR && (c == '/' || c == '?' || c == '#'))
+            {
+                return url.substring(start, i);
+            }
+        }
+        
+        // no end, check if we got a start
+        if (start == 0)
+        {
+            // no start, use the original
+            return url;
+        }
+        else
+        {
+            // at least we had a start
+            return url.substring(start);
+        }
+    }
 }

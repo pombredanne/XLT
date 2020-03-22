@@ -311,6 +311,27 @@ public class UrlUtilsTest
     }
 
     @Test
+    public void testRegex()
+    {
+        Assert.assertEquals("www.foo.bar", UrlUtils.retrieveHostFromUrl("http://www.foo.bar"));
+        Assert.assertEquals("www.foo.bar", UrlUtils.retrieveHostFromUrl("http://www.foo.bar?"));
+        Assert.assertEquals("www.foo.bar", UrlUtils.retrieveHostFromUrl("http://www.foo.bar#"));
+        Assert.assertEquals("www.foo.bar", UrlUtils.retrieveHostFromUrl("http://www.foo.bar/"));
+        Assert.assertEquals("www.foo.bar", UrlUtils.retrieveHostFromUrl("http://www.foo.bar/?"));
+        Assert.assertEquals("www.foo.bar", UrlUtils.retrieveHostFromUrl("http://www.foo.bar/test/index.html"));
+        Assert.assertEquals("www.foo.bar", UrlUtils.retrieveHostFromUrl("www.foo.bar?81"));
+        Assert.assertEquals("www.foo.bar", UrlUtils.retrieveHostFromUrl("www.foo.bar#test"));
+        Assert.assertEquals("www.foo.bar", UrlUtils.retrieveHostFromUrl("www.foo.bar/foo"));
+        Assert.assertEquals("www.foo.bar", UrlUtils.retrieveHostFromUrl("www.foo.bar"));
+        Assert.assertEquals("", UrlUtils.retrieveHostFromUrl(""));
+        Assert.assertEquals("", UrlUtils.retrieveHostFromUrl("/"));
+        Assert.assertEquals("", UrlUtils.retrieveHostFromUrl("?"));
+        Assert.assertEquals("", UrlUtils.retrieveHostFromUrl("#"));
+
+        Assert.assertEquals("www", UrlUtils.retrieveHostFromUrl("://www"));
+    }
+    
+    @Test
     public void testParseUrl_Issue_2781() throws Throwable
     {
         final URLInfo info = UrlUtils.parseUrlString("http://fonts.googleapis.com/css?family=Roboto:400,300,500,300italic|Inconsolata:400,700");

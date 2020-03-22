@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.xceptance.xlt.api.engine.Data;
 import com.xceptance.xlt.api.engine.RequestData;
 import com.xceptance.xlt.api.report.AbstractReportProvider;
+import com.xceptance.xlt.engine.util.UrlUtils;
 
 /**
  * Provides basic statistics for the hosts visited during the test.
@@ -57,7 +58,7 @@ public class HostsReportProvider extends AbstractReportProvider
             }
             else
             {
-                hostName = extractHostNameFromUrl(url);
+                hostName = UrlUtils.retrieveHostFromUrl(url);
             }
 
             // get/create the respective host report
@@ -73,26 +74,5 @@ public class HostsReportProvider extends AbstractReportProvider
             // update the statistics
             hostReport.count++;
         }
-    }
-
-    private String extractHostNameFromUrl(final String url)
-    {
-        String tmp = url;
-
-        // strip protocol if present
-        final int startIndex = tmp.indexOf("://");
-        if (startIndex != -1)
-        {
-            tmp = StringUtils.substring(tmp, startIndex + 3);
-        }
-
-        // strip path/query/fragment if present (whatever comes first)
-        final int endIndex = StringUtils.indexOfAny(tmp, "/?#");
-        if (endIndex != -1)
-        {
-            tmp = StringUtils.substring(tmp, 0, endIndex);
-        }
-
-        return tmp;
     }
 }
