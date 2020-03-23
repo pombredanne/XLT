@@ -66,7 +66,7 @@ public class TransactionData extends TimerData
      */
     public TransactionData()
     {
-        this(null);
+        super(TYPE_CODE);
     }
 
     /**
@@ -316,5 +316,11 @@ public class TransactionData extends TimerData
                 }
             }
         }
+    }
+
+    @Override
+    public Data newInstance()
+    {
+        return new TransactionData();
     }
 }

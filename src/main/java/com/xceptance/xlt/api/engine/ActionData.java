@@ -31,7 +31,7 @@ public class ActionData extends TimerData
      */
     public ActionData()
     {
-        this(null);
+        super(TYPE_CODE);
     }
 
     /**
@@ -44,5 +44,11 @@ public class ActionData extends TimerData
     public ActionData(final String name)
     {
         super(name, TYPE_CODE);
+    }
+
+    @Override
+    public Data newInstance()
+    {
+        return new ActionData();
     }
 }

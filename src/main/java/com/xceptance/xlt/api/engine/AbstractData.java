@@ -18,12 +18,12 @@ public abstract class AbstractData implements Data
     /**
      * The time when the event occurred that this data record was created for.
      */
-    private long time = GlobalClock.getInstance().getTime();
+    private long time;
 
     /**
      * The type code.
      */
-    private final String typeCode;
+    private String typeCode;
 
     /**
      * The name of the data record. Typically, data records for the same piece of work share a common name.
@@ -41,16 +41,16 @@ public abstract class AbstractData implements Data
     private String agentName;
 
     /**
-     * Creates a new AbstractData object and gives it the specified type code.
      * 
-     * @param typeCode
-     *            the type code
+     * @param clock
      */
-    public AbstractData(final String typeCode)
+    public AbstractData(final GlobalClock clock)
     {
-        this(null, typeCode);
+        // moved here to avoid this being set as part of the report processing
+        // automatically, so we can pass it a fake clock when creation reports
+        this.time = clock.getTime();
     }
-
+    
     /**
      * Creates a new AbstractData object and gives it the specified name and type code.
      * 
@@ -60,11 +60,34 @@ public abstract class AbstractData implements Data
      *            the type code
      */
     public AbstractData(final String name, final String typeCode)
-    {
+    {        
+        this(GlobalClock.getInstance());
+
         this.name = name;
         this.typeCode = typeCode;
     }
-
+    
+    /**
+     * Creates a new AbstractData object and gives it the specified type code.
+     * 
+     * @param typeCode
+     *            the type code
+     */
+    public AbstractData(final String typeCode)
+    {
+        this(null, typeCode);
+    }
+    
+    /**
+     * Return a new instance of itself using the provided clock. This is mainly
+     * meant for the creation of this instance as part of the report processing
+     * where the time recording is not needed.
+     * 
+     * @param clock the clock to use for initialization
+     * @return new instance
+     */
+    public abstract Data newInstance();
+    
     /**
      * {@inheritDoc}
      */
