@@ -185,6 +185,9 @@ class DataRecordReader implements Runnable
 
         try (final BufferedReader reader = new BufferedReader(new InputStreamReader(file.getContent().getInputStream(),
                                                                                     XltConstants.UTF8_ENCODING)))
+        // VFS has not performance impact, hence this test code can stay here for later if needed, but might
+        // not turn into a feature
+        // try (final BufferedReader reader = new BufferedReader(new FileReader(file.toString().replaceFirst("^file://", ""))))
         {
             List<String> lines = new ArrayList<String>(CHUNK_SIZE);
             int baseLineNumber = 1;  // let line numbering start at 1
