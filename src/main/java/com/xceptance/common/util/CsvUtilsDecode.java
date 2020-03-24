@@ -67,7 +67,7 @@ public final class CsvUtilsDecode
      */
     public static List<String> parse(final char[] src, final char fieldSeparator)
     {
-        final ArrayList<String> result = new ArrayList<>(32);
+        final SimpleArrayList<String> result = new SimpleArrayList<>(32);
         
         int state = NONE;
         int pos = 0;
