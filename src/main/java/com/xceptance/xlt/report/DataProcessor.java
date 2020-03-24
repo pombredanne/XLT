@@ -131,6 +131,7 @@ public class DataProcessor
 
         final int readerThreadCount;
         final int parserThreadCount;
+        final int statisticsThreadCount;
 
         // we have a desire to restrict the amount of processor used
         // but this won't be 100% precise! 
@@ -138,14 +139,17 @@ public class DataProcessor
         {
             readerThreadCount = Math.max(1, maxThreadCount / 2);
             parserThreadCount = Math.max(1, maxThreadCount / 2);
+            statisticsThreadCount = Math.max(1, maxThreadCount / 2);
         }
         else
         {
             // don't restrict us
-            parserThreadCount = Math.max(1, cpuCount);
+            parserThreadCount = cpuCount;
             
             // we need less readers, the parsers are slow
             readerThreadCount = Math.max(1, cpuCount / 2);
+            
+            statisticsThreadCount = cpuCount;
         }
 
         // create the dispatcher
@@ -165,7 +169,7 @@ public class DataProcessor
         LOG.info(String.format("Reading files from input directory '%s' ...\n", inputDir));
         
         // the one and only data record processor
-        dataRecordProcessor = new StatisticsProcessor(reportProviders, dispatcher);
+        dataRecordProcessor = new StatisticsProcessor(reportProviders, dispatcher, statisticsThreadCount);
 
         dataRecordProcessorThread = new Thread(dataRecordProcessor, "StatisticsProcessor");
         dataRecordProcessorThread.setDaemon(true);

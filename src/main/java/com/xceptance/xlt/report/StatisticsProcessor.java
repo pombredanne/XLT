@@ -44,6 +44,12 @@ class StatisticsProcessor implements Runnable
     private final ReportProvider[] reportProviders;
 
     /**
+     * A thread limit given from the outside
+     */
+    private final int threadCount;
+    
+    
+    /**
      * Constructor.
      *
      * @param reportProviders
@@ -51,13 +57,14 @@ class StatisticsProcessor implements Runnable
      * @param dispatcher
      *            the dispatcher that coordinates result processing
      */
-    public StatisticsProcessor(final List<ReportProvider> reportProviders, final Dispatcher dispatcher)
+    public StatisticsProcessor(final List<ReportProvider> reportProviders, final Dispatcher dispatcher, int threadCount)
     {
         this.reportProviders = reportProviders.toArray(new ReportProvider[0]);
         this.dispatcher = dispatcher;
 
         maximumTime = 0;
         minimumTime = Long.MAX_VALUE;
+        this.threadCount = threadCount;
     }
 
     /**
@@ -86,8 +93,8 @@ class StatisticsProcessor implements Runnable
     @Override
     public void run()
     {
-        // just a few threads are good enough
-        final ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
+        // use the recommendation from the outside
+        final ForkJoinPool pool = new ForkJoinPool(threadCount);
 
         while (true)
         {
