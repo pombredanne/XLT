@@ -10,7 +10,6 @@ package com.xceptance.common.lang;
 public final class ParseNumbers
 {
     private static final int DIGITOFFSET = 48;
-    private static final int BASE = 10;
     
     /**
      * Parses the string and returns the result as int. Raises a NumberFormatException in case of an non-convertable
@@ -38,29 +37,31 @@ public final class ParseNumbers
             throw new NumberFormatException("length = 0");
         }
         
-        try
-        {
-            long value = 0;
-            for (int i = 0; i < length; i++)
-            {
-                final int digit = s.charAt(i);
-                
-                if (digit >= '0' && digit <= '9')
-                {
-                    value = ((value << 3) + (value << 1)) + (digit - DIGITOFFSET);
-                }
-                else
-                {
-                    throw new NumberFormatException();
-                }
-            }
-
-            return value;
-        }
-        catch (final Exception e)
+        // that is safe, we already know that we are > 0
+        final int digit = s.charAt(0);
+        
+        // turn the compare around to allow the compiler and cpu
+        // to run the next code most of the time
+        if (digit < '0' || digit > '9')
         {
             return Long.parseLong(s);
         }
+        
+        long value = digit - DIGITOFFSET;
+        
+        for (int i = 1; i < length; i++)
+        {
+            final int d = s.charAt(i);
+            if (d < '0' || d > '9')
+            {
+                return Long.parseLong(s);
+            }
+
+            value = ((value << 3) + (value << 1));
+            value += (d - DIGITOFFSET);
+        }
+
+        return value;
     }
 
     /**
@@ -89,28 +90,30 @@ public final class ParseNumbers
             throw new NumberFormatException("length = 0");
         }
         
-        try
-        {
-            int value = 0;
-            for (int i = 0; i < length; i++)
-            {
-                final int digit = s.charAt(i);
-                
-                if (digit >= '0' && digit <= '9')
-                {
-                    value = ((value << 3) + (value << 1)) + (digit - DIGITOFFSET);
-                }
-                else
-                {
-                    throw new NumberFormatException();
-                }
-            }
-
-            return value;
-        }
-        catch (final Exception e)
+        // that is safe, we already know that we are > 0
+        final int digit = s.charAt(0);
+        
+        // turn the compare around to allow the compiler and cpu
+        // to run the next code most of the time
+        if (digit < '0' || digit > '9')
         {
             return Integer.parseInt(s);
         }
+        
+        int value = digit - DIGITOFFSET;
+        
+        for (int i = 1; i < length; i++)
+        {
+            final int d = s.charAt(i);
+            if (d < '0' || d > '9')
+            {
+                return Integer.parseInt(s);
+            }
+
+            value = ((value << 3) + (value << 1));
+            value += (d - DIGITOFFSET);
+        }
+
+        return value;
     }
 }
