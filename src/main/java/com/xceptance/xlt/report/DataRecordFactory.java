@@ -16,7 +16,8 @@ public class DataRecordFactory
     /**
      * The registered data handlers per Data(Record) type. 
      */
-    private final Map<Character, Class<? extends Data>> classes = new HashMap<>(11);
+    private final Class<? extends Data> classes[];
+    private final int offset;
 
     /**
      * Setup this factory based on the config
@@ -25,11 +26,23 @@ public class DataRecordFactory
      */
     public DataRecordFactory(final Map<String, Class<? extends Data>> dataClasses)
     {
+        int min = Integer.MAX_VALUE;
+        int max = Integer.MIN_VALUE;
         for (final Map.Entry<String, Class<? extends Data>> entry : dataClasses.entrySet())
         {
-            final Character typeCode = entry.getKey().charAt(0);
-            final Class<? extends Data> c = entry.getValue();
-            registerStatisticsClass(c, typeCode);
+            char c = entry.getKey().charAt(0);
+            min = Math.min(min, c);
+            max = Math.max(max, c);
+        }
+
+        offset = min;
+        classes = new Class[max - offset + 1];
+        
+        for (final Map.Entry<String, Class<? extends Data>> entry : dataClasses.entrySet())
+        {
+            final int typeCode = entry.getKey().charAt(0);
+            final Class<? extends Data> clazz = entry.getValue();
+            registerStatisticsClass(clazz, typeCode);
         }
     }
     
@@ -39,21 +52,11 @@ public class DataRecordFactory
      * @param c
      * @param typeCode
      */
-    public void registerStatisticsClass(final Class<? extends Data> c, final Character typeCode)
+    public void registerStatisticsClass(final Class<? extends Data> c, final int typeCode)
     {
-        classes.put(typeCode, c);
+        classes[typeCode - offset] = c;
     }
     
-    /**
-     * Remove a data processor/handler
-     * 
-     * @param typeCode
-     */
-    public void unregisterStatisticsClass(final Character typeCode)
-    {
-        classes.remove(typeCode);
-    }
-
     /**
      * Return the 
      * @param s
@@ -64,7 +67,7 @@ public class DataRecordFactory
     {
         // get the type code
         // get the respective data record class
-        final Class<? extends Data> c = classes.get(s.charAt(0));
+        final Class<? extends Data> c = classes[s.charAt(0)- offset];
 
         // create the statistics object
         final Data stats = c.newInstance();
