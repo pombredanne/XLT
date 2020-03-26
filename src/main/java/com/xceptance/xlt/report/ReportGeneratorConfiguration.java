@@ -389,13 +389,13 @@ public class ReportGeneratorConfiguration extends AbstractConfiguration implemen
                                                       defaultChartCappingMode);
 
         chartsCompressionLevel = getIntProperty(PROP_CHARTS_COMPRESSION_LEVEL, 6);
-        chartsWidth = getIntProperty(PROP_CHARTS_WIDTH, 600);
+        chartsWidth = getIntProperty(PROP_CHARTS_WIDTH, 900);
         chartsHeight = getIntProperty(PROP_CHARTS_HEIGHT, 300);
         movingAveragePoints = getIntProperty(PROP_CHARTS_MOV_AVG_PERCENTAGE, 5);
 
         threadCount = getIntProperty(PROP_THREAD_COUNT, Runtime.getRuntime().availableProcessors());
 
-        removeIndexesFromRequestNames = getBooleanProperty(PROP_REMOVE_INDEXES_FROM_REQUEST_NAMES, false);
+        removeIndexesFromRequestNames = getBooleanProperty(PROP_REMOVE_INDEXES_FROM_REQUEST_NAMES, true);
 
         dataRecordClasses = readDataRecordClasses();
         reportProviderClasses = readReportProviderClasses();
