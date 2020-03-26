@@ -31,3 +31,23 @@ Before ArrayList replacement
 SimpleArrayList
 1, 0-3, 24,909,446 (42,778 ms) - (593,082 lines/s)
 1, 0,2, 24,909,446 (41,890 ms) - (607,547 lines/s)
+
+RAMDisk 6GB Torrid without output
+1, 0-3, 24,909,446 (36,288 ms) - (691,929 lines/s)
+1, 0,2, 24,909,446 (33,530 ms) - (754,831 lines/s)
+2, 0-3, 24,909,446 (39,442 ms) - (638,703 lines/s)
+2, 0,2, 24,909,446 (27,661 ms) - (922,572 lines/s)
+-, 0-3, 24,909,446 (24,370 ms) - (1,037,893 lines/s)
+-, 0,2, 24,909,446 (28,315 ms) - (889,623 lines/s)
+
+Single typecode as Character
+-, 0-3, 24,909,446 (23,176 ms) - (1,083,019 lines/s)
+
+Array instead of Map for DataRecordFactory to find class
+1, 0-3, 24,909,446 (34,527 ms) - (732,630 lines/s)
+2, 0-3, 24,909,446 (35,740 ms) - (711,698 lines/s)
+2, 0,2, 24,909,446 (27,945 ms) - (922,572 lines/s)
+-, 0-3, 24,909,446 (22,989 ms) - (1,132,247 lines/s)
+
+
+
