@@ -140,10 +140,4 @@ public class EventData extends AbstractData
     {
         return 5;
     }
-
-    @Override
-    public Data newInstance()
-    {
-        return new EventData();
-    }
 }

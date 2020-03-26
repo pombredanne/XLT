@@ -317,10 +317,4 @@ public class TransactionData extends TimerData
             }
         }
     }
-
-    @Override
-    public Data newInstance()
-    {
-        return new TransactionData();
-    }
 }

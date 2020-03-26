@@ -45,10 +45,4 @@ public class ActionData extends TimerData
     {
         super(name, TYPE_CODE);
     }
-
-    @Override
-    public Data newInstance()
-    {
-        return new ActionData();
-    }
 }

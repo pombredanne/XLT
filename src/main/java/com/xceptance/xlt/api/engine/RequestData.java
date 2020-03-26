@@ -348,11 +348,14 @@ public class RequestData extends TimerData
      */
     public void setBytesReceived(final int responseSize)
     {
-        if (responseSize < 0)
+        if (responseSize >= 0)
+        {
+            bytesReceived = responseSize;
+        }
+        else
         {
             throw new IllegalArgumentException("Response size must not be negative: '" + responseSize + "'.");
         }
-        bytesReceived = responseSize;
     }
 
     /**
@@ -363,11 +366,14 @@ public class RequestData extends TimerData
      */
     public void setBytesSent(final int requestSize)
     {
-        if (requestSize < 0)
+        if (requestSize >= 0)
+        {
+            bytesSent = requestSize;
+        }
+        else
         {
             throw new IllegalArgumentException("Request size must not be negative: '" + requestSize + "'.");
         }
-        bytesSent = requestSize;
     }
 
     /**
@@ -446,11 +452,14 @@ public class RequestData extends TimerData
      */
     public void setResponseCode(final int responseCode)
     {
-        if (responseCode < 0)
+        if (responseCode >= 0)
+        {
+            this.responseCode = responseCode;
+        }
+        else
         {
             throw new IllegalArgumentException("Response code must not be negative: " + responseCode + "'.");
         }
-        this.responseCode = responseCode;
     }
 
     /**
@@ -634,12 +643,13 @@ public class RequestData extends TimerData
             setFormData(values.get(19));
             setDnsTime(ParseNumbers.parseInt(values.get(20)));
             ipAddresses = values.get(21);
-            setResponseId(values.get(21));
+            setResponseId(values.get(22));
         }
         else
         {
             // do legacy, translate to array because it does rarely happen
             parseLegacyValues(values.toArray(new String[0]));
+            System.out.println("ff");
         }
     }
 
@@ -691,11 +701,5 @@ public class RequestData extends TimerData
         {
             setDnsTime(ParseNumbers.parseInt(values[20]));
         }
-    }
-
-    @Override
-    public Data newInstance()
-    {
-        return new RequestData();
     }
 }

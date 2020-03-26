@@ -39,6 +39,7 @@ public class CustomValue extends AbstractData
         super(TYPE_CODE);
     }
 
+
     /**
      * Sets the value.
      * 
@@ -88,11 +89,5 @@ public class CustomValue extends AbstractData
     {
         super.parseValues(values);
         value = Double.parseDouble(values.get(3));
-    }
-
-    @Override
-    public Data newInstance()
-    {
-        return new CustomValue();
     }
 }

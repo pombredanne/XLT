@@ -1,7 +1,6 @@
 package com.xceptance.xlt.api.engine;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import com.xceptance.common.lang.ParseNumbers;
@@ -18,7 +17,7 @@ public abstract class AbstractData implements Data
     /**
      * The time when the event occurred that this data record was created for.
      */
-    private long time;
+    private long time = GlobalClock.getInstance().getTime();
 
     /**
      * The type code.
@@ -41,17 +40,6 @@ public abstract class AbstractData implements Data
     private String agentName;
 
     /**
-     * 
-     * @param clock
-     */
-    public AbstractData(final GlobalClock clock)
-    {
-        // moved here to avoid this being set as part of the report processing
-        // automatically, so we can pass it a fake clock when creation reports
-        this.time = clock.getTime();
-    }
-    
-    /**
      * Creates a new AbstractData object and gives it the specified name and type code.
      * 
      * @param name
@@ -61,8 +49,6 @@ public abstract class AbstractData implements Data
      */
     public AbstractData(final String name, final String typeCode)
     {        
-        this(GlobalClock.getInstance());
-
         this.name = name;
         this.typeCode = typeCode;
     }
@@ -77,16 +63,6 @@ public abstract class AbstractData implements Data
     {
         this(null, typeCode);
     }
-    
-    /**
-     * Return a new instance of itself using the provided clock. This is mainly
-     * meant for the creation of this instance as part of the report processing
-     * where the time recording is not needed.
-     * 
-     * @param clock the clock to use for initialization
-     * @return new instance
-     */
-    public abstract Data newInstance();
     
     /**
      * {@inheritDoc}

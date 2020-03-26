@@ -41,10 +41,4 @@ public class CustomData extends TimerData
     {
         super(name, TYPE_CODE);
     }
-
-    @Override
-    public Data newInstance()
-    {
-        return new CustomData();
-    }
 }

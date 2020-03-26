@@ -39,7 +39,7 @@ public interface Data
      * @param s
      *            the list of values
      */
-    public void fromCSV(String s);
+    public void fromCSV(final String s);
 
     /**
      * Returns the name of the agent that produced this data record. Only used during report generation or analysis.
