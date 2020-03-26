@@ -1,6 +1,5 @@
 package com.xceptance.xlt.report;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import com.xceptance.xlt.api.engine.Data;
