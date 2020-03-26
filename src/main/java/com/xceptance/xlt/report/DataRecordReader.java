@@ -13,6 +13,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileType;
 
+import com.xceptance.common.util.SimpleArrayList;
 import com.xceptance.xlt.common.XltConstants;
 
 /**
@@ -189,7 +190,7 @@ class DataRecordReader implements Runnable
         // not turn into a feature
         // try (final BufferedReader reader = new BufferedReader(new FileReader(file.toString().replaceFirst("^file://", ""))))
         {
-            List<String> lines = new ArrayList<String>(CHUNK_SIZE);
+            List<String> lines = new SimpleArrayList<>(CHUNK_SIZE + 10);
             int baseLineNumber = 1;  // let line numbering start at 1
             int linesRead = 0;
 
@@ -198,7 +199,7 @@ class DataRecordReader implements Runnable
             while (line != null)
             {
                 linesRead++;
-                lines.add(line);
+                lines.add(line.toString());
 
                 if (linesRead == CHUNK_SIZE)
                 {
@@ -206,7 +207,7 @@ class DataRecordReader implements Runnable
                     buildAndSubmitLineChunk(lines, baseLineNumber, file, collectActionNames, adjustTimerName);
 
                     // start a new chunk
-                    lines = new ArrayList<String>(CHUNK_SIZE);
+                    lines = new SimpleArrayList<>(CHUNK_SIZE);
                     baseLineNumber += linesRead;
 
                     totalLineCounter.addAndGet(linesRead);
@@ -226,9 +227,10 @@ class DataRecordReader implements Runnable
         }
         catch (final Exception ex)
         {
-            final String msg = String.format("Failed to read file '%s': %s\n", file, ex.getMessage());
+            final String msg = String.format("Failed to read file '%s': %s\n", file, ex);
             LOG.error(msg);
             System.out.println(msg);
+            ex.printStackTrace();
         }
     }
 

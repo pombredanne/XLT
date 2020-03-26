@@ -1,6 +1,5 @@
 package com.xceptance.xlt.report;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
@@ -9,6 +8,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.xceptance.common.util.SimpleArrayList;
 import com.xceptance.xlt.api.engine.ActionData;
 import com.xceptance.xlt.api.engine.Data;
 import com.xceptance.xlt.api.engine.PageLoadTimingData;
@@ -106,7 +106,7 @@ class DataRecordParser implements Runnable
                 final List<String> lines = lineChunk.getLines();
 
                 // parse the chunk of lines and preprocess the results
-                final List<Data> dataRecordChunk = new ArrayList<Data>(lines.size());
+                final List<Data> dataRecordChunk = new SimpleArrayList<>(lines.size());
 
                 int lineNumber = lineChunk.getBaseLineNumber();
 
