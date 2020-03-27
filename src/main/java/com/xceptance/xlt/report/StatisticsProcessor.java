@@ -9,6 +9,8 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.gargoylesoftware.htmlunit.javascript.host.SimpleArray;
+import com.xceptance.common.util.SimpleArrayList;
 import com.xceptance.xlt.api.engine.Data;
 import com.xceptance.xlt.api.report.ReportProvider;
 
@@ -105,7 +107,7 @@ class StatisticsProcessor implements Runnable
 
                 // submit this to all report providers and each provider does its own loop
                 // we assume that they are independent of each other and hence this is ok
-                final List<ForkJoinTask<?>> tasks = new ArrayList<>(reportProviders.length);
+                final ForkJoinTask<?>[] tasks = new ForkJoinTask[reportProviders.length];
                 for (int i = 0; i < reportProviders.length; i++)
                 {
                     final ReportProvider reportProvider = reportProviders[i];
@@ -115,13 +117,16 @@ class StatisticsProcessor implements Runnable
                     final ForkJoinTask<?> task = pool.submit(() -> {
                         processDataRecords(reportProvider, dataRecords);
                     });
-                    tasks.add(task);
+                    tasks[i] = task;
                 }
 
                 maintainStatistics(dataRecords);
 
                 // wait for completion
-                tasks.forEach(t -> t.quietlyJoin());
+                for (int i = 0; i < tasks.length; i++)
+                {
+                    tasks[i].quietlyJoin();
+                }
 
                 // one more chunk is complete
                 dispatcher.finishedProcessing();
