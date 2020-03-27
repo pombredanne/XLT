@@ -97,7 +97,7 @@ public abstract class AbstractReader<T>
         processorThread.start();
 
         // the data preprocessor threads
-        preprocessorExecutor = Executors.newFixedThreadPool(preprocessorThreadCount, new DaemonThreadFactory("DataRecordPreprocessor-"));
+        preprocessorExecutor = Executors.newFixedThreadPool(preprocessorThreadCount, new DaemonThreadFactory(i -> "DataRecordPreprocessor-" + i));
         for (int i = 0; i < preprocessorThreadCount; i++)
         {
             preprocessorExecutor.execute(new Preprocessor());

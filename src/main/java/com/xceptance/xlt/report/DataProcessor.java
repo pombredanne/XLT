@@ -156,11 +156,13 @@ public class DataProcessor
         dispatcher = new Dispatcher();
 
         // create the reader executor
-        dataRecordReaderExecutor = Executors.newFixedThreadPool(readerThreadCount, new DaemonThreadFactory("DataRecordReader-"));
+        dataRecordReaderExecutor = Executors.newFixedThreadPool(config.readerThreadCount, new DaemonThreadFactory(i -> "DataRecordReader-" + i, Thread.MAX_PRIORITY));
 
         // create the data record parser threads
-        dataRecordParserExecutor = Executors.newFixedThreadPool(parserThreadCount, new DaemonThreadFactory("DataRecordParser-"));
-        for (int i = 0; i < parserThreadCount; i++)
+        dataRecordParserExecutor = Executors.newFixedThreadPool(config.parserThreadCount, new DaemonThreadFactory(i -> "DataRecordParser-" + i));
+        
+        // start the threads
+        for (int i = 0; i < config.parserThreadCount; i++)
         {
             dataRecordParserExecutor.execute(new DataRecordParser(dataRecordFactory, fromTime, toTime, requestMergeRules, dispatcher,
                                                                   removeIndexesFromRequestNames));

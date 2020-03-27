@@ -67,14 +67,7 @@ public class RequestQueue
         this.threadCount = threadCount;
         parallelModeEnabled = true;
 
-        final ThreadFactory threadFactory = new DaemonThreadFactory(new Getter<String>()
-        {
-            @Override
-            public String get()
-            {
-                return Session.getCurrent().getUserID() + "-pool-";
-            }
-        });
+        final ThreadFactory threadFactory = new DaemonThreadFactory(i -> Session.getCurrent().getUserID() + "-pool-" + i);
 
         executorService = Executors.newFixedThreadPool(threadCount, threadFactory);
         ongoingRequestsCount = new SynchronizingCounter(0);
