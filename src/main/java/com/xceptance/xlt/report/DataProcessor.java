@@ -115,45 +115,20 @@ public class DataProcessor
      * @param removeIndexesFromRequestNames
      *            whether to automatically remove any indexes from request names
      */
-    public DataProcessor(final FileObject inputDir, final DataRecordFactory dataRecordFactory, final long fromTime, final long toTime,
-                     final List<ReportProvider> reportProviders, final List<RequestProcessingRule> requestMergeRules,
-                     final int maxThreadCount, final String testCaseIncludePatternList, final String testCaseExcludePatternList,
-                     final String agentIncludePatternList, final String agentExcludePatternList,
-                     final boolean removeIndexesFromRequestNames)
+    public DataProcessor(
+                     final ReportGeneratorConfiguration config,
+                     final FileObject inputDir, final DataRecordFactory dataRecordFactory, final long fromTime, final long toTime,
+                     final List<ReportProvider> reportProviders, 
+                     final String testCaseIncludePatternList, final String testCaseExcludePatternList,
+                     final String agentIncludePatternList, final String agentExcludePatternList)
     {
         this.inputDir = inputDir;
         
         testCaseFilter = new StringMatcher(testCaseIncludePatternList, testCaseExcludePatternList, true);
         agentFilter = new StringMatcher(agentIncludePatternList, agentExcludePatternList, true);
 
-        // be semi-smart with the number of threads depending on the number of available CPUs
-        final int cpuCount = Runtime.getRuntime().availableProcessors();
-
-        final int readerThreadCount;
-        final int parserThreadCount;
-        final int statisticsThreadCount;
-
-        // we have a desire to restrict the amount of processor used
-        // but this won't be 100% precise! 
-        if (maxThreadCount < cpuCount)
-        {
-            readerThreadCount = Math.max(1, maxThreadCount / 2);
-            parserThreadCount = Math.max(1, maxThreadCount / 2);
-            statisticsThreadCount = Math.max(1, maxThreadCount / 2);
-        }
-        else
-        {
-            // don't restrict us
-            parserThreadCount = cpuCount;
-            
-            // we need less readers, the parsers are slow
-            readerThreadCount = Math.max(1, cpuCount / 2);
-            
-            statisticsThreadCount = cpuCount;
-        }
-
         // create the dispatcher
-        dispatcher = new Dispatcher();
+        dispatcher = new Dispatcher(config);
 
         // create the reader executor
         dataRecordReaderExecutor = Executors.newFixedThreadPool(config.readerThreadCount, new DaemonThreadFactory(i -> "DataRecordReader-" + i, Thread.MAX_PRIORITY));
@@ -164,14 +139,16 @@ public class DataProcessor
         // start the threads
         for (int i = 0; i < config.parserThreadCount; i++)
         {
-            dataRecordParserExecutor.execute(new DataRecordParser(dataRecordFactory, fromTime, toTime, requestMergeRules, dispatcher,
-                                                                  removeIndexesFromRequestNames));
+            dataRecordParserExecutor.execute(new DataRecordParser(dataRecordFactory, 
+                                                                  fromTime, toTime, 
+                                                                  config.getRequestProcessingRules(), dispatcher,
+                                                                  config.getRemoveIndexesFromRequestNames()));
         }
 
         LOG.info(String.format("Reading files from input directory '%s' ...\n", inputDir));
         
         // the one and only data record processor
-        dataRecordProcessor = new StatisticsProcessor(reportProviders, dispatcher, statisticsThreadCount);
+        dataRecordProcessor = new StatisticsProcessor(reportProviders, dispatcher, config.statisticsThreadCount);
 
         dataRecordProcessorThread = new Thread(dataRecordProcessor, "StatisticsProcessor");
         dataRecordProcessorThread.setDaemon(true);

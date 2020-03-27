@@ -22,11 +22,6 @@ import com.xceptance.xlt.common.XltConstants;
 class DataRecordReader implements Runnable
 {
     /**
-     * The maximum number of lines in a chunk.
-     */
-    private static final int CHUNK_SIZE = 1000;
-
-    /**
      * Class logger.
      */
     private static final Log LOG = LogFactory.getLog(DataRecordReader.class);
@@ -108,9 +103,8 @@ class DataRecordReader implements Runnable
         }
         catch (final Exception e)
         {
-            final String msg = String.format("Failed to read test results from directory '%s': %s", directory, e);
-            LOG.error(msg);
-            System.out.println(msg);
+            final String msg = String.format("Failed to read test results from directory '%s':", directory);
+            LOG.error(msg, e);
         }
         finally
         {
@@ -184,13 +178,15 @@ class DataRecordReader implements Runnable
         // System.out.printf("Reading file '%s' ...", file);
         // LOG.info(String.format("Reading file '%s' ...", file));
 
+        final int chunkSize = dispatcher.chunkSize;
+        
         try (final BufferedReader reader = new BufferedReader(new InputStreamReader(file.getContent().getInputStream(),
                                                                                     XltConstants.UTF8_ENCODING)))
         // VFS has not performance impact, hence this test code can stay here for later if needed, but might
         // not turn into a feature
-        // try (final BufferedReader reader = new BufferedReader(new FileReader(file.toString().replaceFirst("^file://", ""))))
+//        try (final BufferedReader reader = new BufferedReader(new FileReader(file.toString().replaceFirst("^file://", ""))))
         {
-            List<String> lines = new SimpleArrayList<>(CHUNK_SIZE + 10);
+            List<String> lines = new SimpleArrayList<>(chunkSize + 10);
             int baseLineNumber = 1;  // let line numbering start at 1
             int linesRead = 0;
 
@@ -201,13 +197,13 @@ class DataRecordReader implements Runnable
                 linesRead++;
                 lines.add(line.toString());
 
-                if (linesRead == CHUNK_SIZE)
+                if (linesRead == chunkSize)
                 {
                     // the chunk is full -> deliver it
                     buildAndSubmitLineChunk(lines, baseLineNumber, file, collectActionNames, adjustTimerName);
 
                     // start a new chunk
-                    lines = new SimpleArrayList<>(CHUNK_SIZE);
+                    lines = new SimpleArrayList<>(chunkSize + 10);
                     baseLineNumber += linesRead;
 
                     totalLineCounter.addAndGet(linesRead);
@@ -227,10 +223,8 @@ class DataRecordReader implements Runnable
         }
         catch (final Exception ex)
         {
-            final String msg = String.format("Failed to read file '%s': %s\n", file, ex);
-            LOG.error(msg);
-            System.out.println(msg);
-            ex.printStackTrace();
+            final String msg = String.format("Failed to read file '%s'", file);
+            LOG.error(msg, ex);
         }
     }
 

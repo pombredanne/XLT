@@ -145,8 +145,8 @@ public class ReportGenerator
 
         config.setReportDirectory(this.outputDir);
 
-        // configure the thread pool
-        TaskManager.getInstance().setMaximumThreadCount(config.getThreadCount());
+        // configure the thread pool to be cpu count for now
+        TaskManager.getInstance().setMaximumThreadCount(Runtime.getRuntime().availableProcessors());
 
         // configure the PNG encoder
         JFreeChartUtils.setPngCompressionLevel(config.getChartCompressionLevel());
@@ -363,12 +363,13 @@ public class ReportGenerator
         final DataRecordFactory dataRecordFactory = new DataRecordFactory(config.getDataRecordClasses());
 
         // read the logs
-        final DataProcessor logReader = new DataProcessor(inputDir, 
+        final DataProcessor logReader = new DataProcessor(config,
+                                                          inputDir, 
                                                           dataRecordFactory, 
                                                           fromTime, toTime,
-                                                          reportProviders, config.getRequestProcessingRules(),
-                                                          config.getThreadCount(), testCaseIncludePatternList, testCaseExcludePatternList,
-                                                          agentIncludePatternList, agentExcludePatternList, config.getRemoveIndexesFromRequestNames());
+                                                          reportProviders, 
+                                                          testCaseIncludePatternList, testCaseExcludePatternList,
+                                                          agentIncludePatternList, agentExcludePatternList);
         logReader.readDataRecords();
 
         final long minTime = logReader.getMinimumTime();

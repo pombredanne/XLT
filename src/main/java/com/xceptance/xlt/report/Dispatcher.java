@@ -22,6 +22,16 @@ import me.tongfei.progressbar.ProgressBarStyle;
 public class Dispatcher
 {
     /**
+     * The maximum number of lines in a chunk.
+     */
+    public static final int DEFAULT_QUEUE_CHUNK_SIZE = 1000;
+
+    /**
+     * The maximum number of lines in a chunk.
+     */
+    public static final int DEFAULT_QUEUE_LENGTH = 50;
+    
+    /**
      * The number of directories that still need to be processed.
      */
     private final SynchronizingCounter remainingDirectories = new SynchronizingCounter();
@@ -39,13 +49,17 @@ public class Dispatcher
     /**
      * The line chunks waiting to be parsed.
      */
-    private final BlockingQueue<LineChunk> lineChunkQueue = new LinkedBlockingQueue<>(50);
+    private final BlockingQueue<LineChunk> lineChunkQueue;
 
     /**
      * The data record chunks waiting to be send to the statistics providers.
      */
-    private final BlockingQueue<List<Data>> dataRecordChunkQueue = new LinkedBlockingQueue<>(50);
+    private final BlockingQueue<List<Data>> dataRecordChunkQueue;
 
+    /**
+     * Size of the chunks in the queues
+     */
+    public final int chunkSize;
     
     /**
      * Our progress bar
@@ -60,8 +74,11 @@ public class Dispatcher
      * @param maxActiveThreads
      *            the maximum number of active threads
      */
-    public Dispatcher()
+    public Dispatcher(final ReportGeneratorConfiguration config)
     {
+        lineChunkQueue = new LinkedBlockingQueue<>(config.threadQueueLength);
+        dataRecordChunkQueue = new LinkedBlockingQueue<>(config.threadQueueLength);
+        chunkSize = config.threadQueueBucketSize;
     }
 
     /**

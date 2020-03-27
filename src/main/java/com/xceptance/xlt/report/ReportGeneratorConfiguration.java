@@ -147,8 +147,13 @@ public class ReportGeneratorConfiguration extends AbstractConfiguration implemen
 
     private static final String PROP_REQUEST_MERGE_RULES_PREFIX = PROP_PREFIX + "requestMergeRules.";
 
-    private static final String PROP_THREAD_COUNT = PROP_PREFIX + "threads";
-
+    // Special settings for profiling and debugging
+    private static final String PROP_PARSER_THREAD_COUNT = PROP_PREFIX + "parser.threads";
+    private static final String PROP_READER_THREAD_COUNT = PROP_PREFIX + "reader.threads";
+    private static final String PROP_STATISTICS_THREAD_COUNT = PROP_PREFIX + "statistics.threads";
+    private static final String PROP_THREAD_QUEUE_SIZE = PROP_PREFIX + "queue.bucketsize";
+    private static final String PROP_THREAD_QUEUE_LENGTH = PROP_PREFIX + "queue.length";
+    
     private static final String PROP_TRANSFORMATIONS_PREFIX = PROP_PREFIX + "transformations.";
 
     private static final String PROP_TRANSFORMATIONS_STYLE_SHEET_FILE_SUFFIX = ".styleSheetFileName";
@@ -225,7 +230,11 @@ public class ReportGeneratorConfiguration extends AbstractConfiguration implemen
 
     private boolean noAgentCharts;
 
-    private final int threadCount;
+    public final int readerThreadCount;
+    public final int parserThreadCount;
+    public final int statisticsThreadCount;
+    public final int threadQueueBucketSize;
+    public final int threadQueueLength;
 
     private final ChartScale chartScaleMode;
 
@@ -393,7 +402,11 @@ public class ReportGeneratorConfiguration extends AbstractConfiguration implemen
         chartsHeight = getIntProperty(PROP_CHARTS_HEIGHT, 300);
         movingAveragePoints = getIntProperty(PROP_CHARTS_MOV_AVG_PERCENTAGE, 5);
 
-        threadCount = getIntProperty(PROP_THREAD_COUNT, Runtime.getRuntime().availableProcessors());
+        readerThreadCount = Math.max(1, getIntProperty(PROP_READER_THREAD_COUNT, Runtime.getRuntime().availableProcessors() / 2));
+        parserThreadCount = Math.max(1, getIntProperty(PROP_PARSER_THREAD_COUNT, Runtime.getRuntime().availableProcessors()));
+        statisticsThreadCount = Math.max(1, getIntProperty(PROP_STATISTICS_THREAD_COUNT, Runtime.getRuntime().availableProcessors()));
+        threadQueueBucketSize = Math.max(1, getIntProperty(PROP_THREAD_QUEUE_SIZE, Dispatcher.DEFAULT_QUEUE_CHUNK_SIZE));
+        threadQueueLength = Math.max(1, getIntProperty(PROP_THREAD_QUEUE_LENGTH, Dispatcher.DEFAULT_QUEUE_LENGTH));
 
         removeIndexesFromRequestNames = getBooleanProperty(PROP_REMOVE_INDEXES_FROM_REQUEST_NAMES, true);
 
@@ -737,16 +750,6 @@ public class ReportGeneratorConfiguration extends AbstractConfiguration implemen
     public File getTestResultsRootDirectory()
     {
         return testResultsRootDirectory;
-    }
-
-    /**
-     * Returns the number of threads to use during report generation.
-     *
-     * @return the thread count
-     */
-    public int getThreadCount()
-    {
-        return threadCount;
     }
 
     /**
