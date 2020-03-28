@@ -85,16 +85,19 @@ public class RequestProcessingRule
 
         final ArrayList<AbstractRequestFilter> requestFilters = new ArrayList<>(20);
 
-        try
-        {
-            requestFilters.add(new RequestNameRequestFilter(requestNamePattern));
-            requestFilters.add(new UrlRequestFilter(urlPattern));
-            requestFilters.add(new ContentTypeRequestFilter(contentTypePattern));
-            requestFilters.add(new StatusCodeRequestFilter(statusCodePattern));
-            requestFilters.add(new AgentNameRequestFilter(agentNamePattern));
-            requestFilters.add(new TransactionNameRequestFilter(transactionNamePattern));
-            requestFilters.add(new ResponseTimeRequestFilter(responseTimeRanges));
+        // parse the placeholder positions now (and only once)
+        newNamePlaceholders = parsePlaceholderPositions(newName);
 
+        try
+        {   // includes and source of data if not empty and configured
+            addIfTypeCodeInNewName(requestFilters, new RequestNameRequestFilter(requestNamePattern), requestNamePattern, newNamePlaceholders);
+            addIfTypeCodeInNewName(requestFilters, new UrlRequestFilter(urlPattern), urlPattern, newNamePlaceholders);
+            addIfTypeCodeInNewName(requestFilters, new ContentTypeRequestFilter(contentTypePattern), contentTypePattern, newNamePlaceholders);
+            addIfTypeCodeInNewName(requestFilters, new StatusCodeRequestFilter(statusCodePattern), statusCodePattern, newNamePlaceholders);
+            addIfTypeCodeInNewName(requestFilters, new AgentNameRequestFilter(agentNamePattern), agentNamePattern, newNamePlaceholders);
+            addIfTypeCodeInNewName(requestFilters, new TransactionNameRequestFilter(transactionNamePattern), transactionNamePattern , newNamePlaceholders);
+            addIfTypeCodeInNewName(requestFilters, new ResponseTimeRequestFilter(responseTimeRanges), responseTimeRanges, newNamePlaceholders);
+                                   
             // excludes
             if (StringUtils.isNotBlank(requestNameExcludePattern))
             {
@@ -133,13 +136,44 @@ public class RequestProcessingRule
 
         this.requestFilters = requestFilters.toArray(new AbstractRequestFilter[requestFilters.size()]);
 
-        // parse the placeholder positions now (and only once)
-        newNamePlaceholders = parsePlaceholderPositions(newName);
-
         // Validate the entire rule.
         validateRule();
     }
 
+    /**
+     * Adds this filter to the filter rule list if the pattern is not empty and the results
+     * is later needed in the new name, otherwise we just ignore it to save cyles
+     */
+    private void addIfTypeCodeInNewName(
+                                        final List<AbstractRequestFilter> filters, final AbstractRequestFilter filter, 
+                                        final String pattern,
+                                        final PlaceholderPosition[] newNamePlaceholders)
+    {
+        final String typeCode = filter.getTypeCode();
+        
+        // if the pattern is empty, we need to know if we might need the data anyway
+        if (pattern == null || "".equals(pattern))
+        {
+            // add the filter only if we need it as source of data
+            for (PlaceholderPosition p : newNamePlaceholders)
+            {
+                if (p.typeCode.equals(typeCode))
+                {
+                    // yes, we play a role
+                    filters.add(filter);
+                    return;
+                }
+            }
+        }
+        else
+        {
+            // the pattern is not empty, add it
+            filters.add(filter);
+        }
+        
+        // well, we don't add it, because we don't need it
+    }
+    
     /**
      * Parses the position of the placeholders in the new name field of the rule.
      *
