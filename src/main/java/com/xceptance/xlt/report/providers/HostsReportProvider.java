@@ -4,8 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
-
+import com.xceptance.common.collection.LRUHashMap;
 import com.xceptance.xlt.api.engine.Data;
 import com.xceptance.xlt.api.engine.RequestData;
 import com.xceptance.xlt.api.report.AbstractReportProvider;
@@ -21,6 +20,11 @@ public class HostsReportProvider extends AbstractReportProvider
      */
     private static final String UNKNOWN_HOST = "(unknown)";
 
+    /**
+     * local cache to speed up processing because host retrieval is expensive
+     */
+    private static final LRUHashMap<String, String> cache = new LRUHashMap<>(7001);
+    
     /**
      * A mapping from host names to their corresponding {@link HostReport} objects.
      */
@@ -50,15 +54,27 @@ public class HostsReportProvider extends AbstractReportProvider
             final RequestData reqData = (RequestData) data;
 
             // determine the host name
-            String hostName;
+            
             final String url = reqData.getUrl();
-            if (StringUtils.isBlank(url))
+            
+            final String hostName;
+            if (url == null || url.length() == 0)
             {
                 hostName = UNKNOWN_HOST;
             }
             else
             {
-                hostName = UrlUtils.retrieveHostFromUrl(url);
+                final String result = cache.get(url);
+                
+                if (result == null)
+                {
+                    hostName = UrlUtils.retrieveHostFromUrl(url);
+                    cache.put(url, hostName);
+                }
+                else
+                {
+                    hostName = result;
+                }
             }
 
             // get/create the respective host report
