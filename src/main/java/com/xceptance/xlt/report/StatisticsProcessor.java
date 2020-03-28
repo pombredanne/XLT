@@ -1,6 +1,5 @@
 package com.xceptance.xlt.report;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
@@ -9,8 +8,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.gargoylesoftware.htmlunit.javascript.host.SimpleArray;
-import com.xceptance.common.util.SimpleArrayList;
 import com.xceptance.xlt.api.engine.Data;
 import com.xceptance.xlt.api.report.ReportProvider;
 
@@ -169,8 +166,7 @@ class StatisticsProcessor implements Runnable
             }
             catch (final Throwable t)
             {
-                LOG.warn("Failed to process data record", t);
-                System.err.println("\nFailed to process data record: " + t);
+                LOG.error("Failed to process data record", t);
             }
         }
     }
