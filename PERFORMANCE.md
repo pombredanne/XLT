@@ -49,5 +49,43 @@ Array instead of Map for DataRecordFactory to find class
 2, 0,2, 24,909,446 (27,945 ms) - (922,572 lines/s)
 -, 0-3, 24,909,446 (22,989 ms) - (1,132,247 lines/s)
 
+# Merge Rules
+
+No Rules, no providers
+24,909,446 (22,489 ms) - (1,132,247 lines/s)
+
+Analytics
+24,909,446 (25,513 ms) - (996,377 lines/s)
+
+Skip empty rules
+24,909,446 (23,055 ms) - (1,083,019 lines/s)
+
+All Provider and analytics
+24,909,446 (53,555 ms) - (469,989 lines/s)
+
+All Provider and No Analytics
+24,909,446 (49,837 ms) - (508,356 lines/s)
 
 
+# Provider and Threading Research
+##  20191022-230434 (24,909,446 records) - RAM Disk
+
+Start Data, Default Threading, all providers
+-, 0-3, 24,909,446 (49,630 ms) - (508,356 lines/s)
+
+Start Data, Default Threading, NO providers
+-, 0-3, 24,909,446 (22,331 ms) - (1,132,247 lines/s)
+
+GeneralReportProvider:      24,909,446 (24,548 ms) - (1,037,893 lines/s)
+TransactionsReportProvider: 24,909,446 (23,671 ms) - (1,083,019 lines/s)
+ActionsReportProvider:      24,909,446 (23,572 ms) - (1,083,019 lines/s)
+All three:                  24,909,446 (29,625 ms) - (858,946 lines/s)
+RequestsReportProvider:     24,909,446 (25,480 ms) - (996,377 lines/s)
+CustomTimersReportProvider: 24,909,446 (23,449 ms) - (1,083,019 lines/s)
+ErrorsReportProvider:       24,909,446 (23,976 ms) - (1,083,019 lines/s)
+ResponseCodesReportProvider:24,909,446 (22,536 ms) - (1,132,247 lines/s)
+
+
+#Idea
+* Providers announce what Data they want and get that only
+* Give each line to all providers in a thread
