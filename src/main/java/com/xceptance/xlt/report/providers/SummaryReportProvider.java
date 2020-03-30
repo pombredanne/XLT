@@ -57,6 +57,12 @@ public class SummaryReportProvider extends AbstractReportProvider
         return report;
     }
 
+    @Override
+    public Data[] supportedDataClasses()
+    {
+        return new Data[] {new RequestData(), new ActionData(), new TransactionData(), new EventData(), new PageLoadTimingData(), new CustomData()};
+    }
+    
     /**
      * {@inheritDoc}
      */
@@ -75,13 +81,13 @@ public class SummaryReportProvider extends AbstractReportProvider
         {
             transactionDataProcessor.processDataRecord(data);
         }
-        else if (data instanceof PageLoadTimingData)
-        {
-            pageLoadDataProcessor.processDataRecord(data);
-        }
         else if (data instanceof CustomData)
         {
             customTimerDataProcessor.processDataRecord(data);
+        }
+        else if (data instanceof PageLoadTimingData)
+        {
+            pageLoadDataProcessor.processDataRecord(data);
         }
     }
 }

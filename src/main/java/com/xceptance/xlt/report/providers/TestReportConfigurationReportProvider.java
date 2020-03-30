@@ -53,6 +53,13 @@ public class TestReportConfigurationReportProvider extends AbstractReportProvide
         return configReport;
     }
 
+
+    @Override
+    public Data[] supportedDataClasses()
+    {
+        return new Data[] {};
+    }
+    
     /**
      * {@inheritDoc}
      */

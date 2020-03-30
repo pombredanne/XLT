@@ -30,6 +30,12 @@ public class TransactionsReportProvider extends BasicTimerReportProvider<Transac
         return report;
     }
 
+    @Override
+    public Data[] supportedDataClasses()
+    {
+        return new Data[] {new TransactionData(), new EventData()};
+    }
+    
     /**
      * {@inheritDoc}
      */

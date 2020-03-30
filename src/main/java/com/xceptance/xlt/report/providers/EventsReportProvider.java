@@ -101,6 +101,12 @@ public class EventsReportProvider extends AbstractReportProvider
         return eventsReport;
     }
 
+    @Override
+    public Data[] supportedDataClasses()
+    {
+        return new Data[] {new EventData()};
+    }
+    
     /**
      * {@inheritDoc}
      */

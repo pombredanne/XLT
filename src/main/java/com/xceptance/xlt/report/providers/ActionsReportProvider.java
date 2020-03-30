@@ -28,6 +28,12 @@ public class ActionsReportProvider extends BasicTimerReportProvider<ActionDataPr
         return report;
     }
 
+    @Override
+    public Data[] supportedDataClasses()
+    {
+        return new Data[] {new ActionData()};
+    }
+    
     /**
      * {@inheritDoc}
      */

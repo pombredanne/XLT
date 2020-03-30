@@ -16,6 +16,13 @@ public class CustomValuesReportProvider extends AbstractDataProcessorBasedReport
         super(CustomValueProcessor.class);
     }
 
+
+    @Override
+    public Data[] supportedDataClasses()
+    {
+        return new Data[] {new CustomValue()};
+    }
+    
     /**
      * {@inheritDoc}
      */

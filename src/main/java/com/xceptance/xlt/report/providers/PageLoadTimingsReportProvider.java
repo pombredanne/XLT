@@ -26,6 +26,13 @@ public class PageLoadTimingsReportProvider extends BasicTimerReportProvider<Page
         return report;
     }
 
+
+    @Override
+    public Data[] supportedDataClasses()
+    {
+        return new Data[] {new PageLoadTimingData()};
+    }
+    
     /**
      * {@inheritDoc}
      */

@@ -34,6 +34,13 @@ public class AgentsReportProvider extends AbstractDataProcessorBasedReportProvid
         return report;
     }
 
+
+    @Override
+    public Data[] supportedDataClasses()
+    {
+        return new Data[] {new JvmResourceUsageData()};
+    }
+    
     /**
      * {@inheritDoc}
      */

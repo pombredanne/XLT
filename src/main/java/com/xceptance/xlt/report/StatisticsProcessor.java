@@ -1,6 +1,9 @@
 package com.xceptance.xlt.report;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.TimeUnit;
@@ -8,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.xceptance.common.util.SimpleArrayList;
 import com.xceptance.xlt.api.engine.Data;
 import com.xceptance.xlt.api.report.ReportProvider;
 
@@ -43,11 +47,16 @@ class StatisticsProcessor implements Runnable
     private final ReportProvider[] reportProviders;
 
     /**
+     * Mapping of data to provider to avoid unnecessary calls
+     */
+    private Map<ReportProvider, List<Data>> mapping;
+    
+    /**
      * A thread limit given from the outside
      */
     private final int threadCount;
-    
-    
+
+
     /**
      * Constructor.
      *
@@ -57,7 +66,7 @@ class StatisticsProcessor implements Runnable
      *            the dispatcher that coordinates result processing
      */
     public StatisticsProcessor(final List<ReportProvider> reportProviders, final Dispatcher dispatcher, int threadCount)
-    {
+    { 
         this.reportProviders = reportProviders.toArray(new ReportProvider[0]);
         this.dispatcher = dispatcher;
 
@@ -87,11 +96,48 @@ class StatisticsProcessor implements Runnable
     }
 
     /**
+     * Setup data and provider mapping for efficiency
+     */
+    private void setupDataToProviderMapping()
+    {
+        mapping = new HashMap<>();
+
+        for (ReportProvider p : reportProviders)
+        {
+            final Data[] dataClasses = p.supportedDataClasses();
+            
+            if (dataClasses.length > 0)
+            {
+                for (Data d : dataClasses)
+                {
+                    mapping.compute(p, (k, v) -> {
+                        if (v == null)
+                        {
+                            v = new ArrayList<>();
+                        }
+                        v.add(d);
+
+                        return v;    
+                    });
+                }
+            }
+            else
+            {
+                // we don't need a thing
+                mapping.put(p, new ArrayList<>(0));
+            }
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public void run()
     {
+        // setup data classes to be able to selectively send data
+        setupDataToProviderMapping();
+
         // use the recommendation from the outside
         final ForkJoinPool pool = new ForkJoinPool(threadCount);
 
@@ -100,23 +146,33 @@ class StatisticsProcessor implements Runnable
             try
             {
                 // get a chunk of parsed data records
-                final List<Data> dataRecords = dispatcher.getNextParsedDataRecordChunk();
-
+                final SimpleArrayList<Data> dataRecords = dispatcher.getNextParsedDataRecordChunk();
+                final List<List<Data>> subDataRecords = dataRecords.partition(20);
+                
                 // submit this to all report providers and each provider does its own loop
                 // we assume that they are independent of each other and hence this is ok
                 final ForkJoinTask<?>[] tasks = new ForkJoinTask[reportProviders.length];
-                for (int i = 0; i < reportProviders.length; i++)
+                
+                for (int d = 0; d < subDataRecords.size(); d++)
                 {
-                    final ReportProvider reportProvider = reportProviders[i];
-
-                    // give all data to each process threads for one report provider aka SIMD
-                    // single instruction multiple data
-                    final ForkJoinTask<?> task = pool.submit(() -> {
-                        processDataRecords(reportProvider, dataRecords);
-                    });
-                    tasks[i] = task;
+                    final List<Data> data = subDataRecords.get(d);
+                    
+                    for (int i = 0; i < reportProviders.length; i++)
+                    {   
+                        final ReportProvider reportProvider = reportProviders[i]; 
+    
+                        // give all data to each process threads for one report provider aka SIMD
+                        // single instruction multiple data
+                        final ForkJoinTask<?> task = pool.submit(() -> {
+                            synchronized(reportProvider)
+                            {
+                                processDataRecords(reportProvider, data);
+                            }
+                        });
+                        tasks[i] = task;
+                    }
                 }
-
+                
                 maintainStatistics(dataRecords);
 
                 // wait for completion
@@ -157,19 +213,21 @@ class StatisticsProcessor implements Runnable
     private void processDataRecords(final ReportProvider reportProvider, final List<Data> data)
     {
         // process the data
-        final int size = data.size();
-        for (int i = 0; i < size; i++)
+        try
         {
-            try
+            final int size = data.size();
+            for (int i = 0; i < size; i++)
             {
-                reportProvider.processDataRecord(data.get(i));
-            }
-            catch (final Throwable t)
-            {
-                LOG.error("Failed to process data record", t);
+                final Data d = data.get(i);
+                reportProvider.processDataRecord(d);
             }
         }
+        catch (final Throwable t)
+        {
+            LOG.error("Failed to process data record, discarding a full chunk!", t);
+        }
     }
+
 
     /**
      * Maintain our statistics

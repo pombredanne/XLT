@@ -29,6 +29,13 @@ public class CustomTimersReportProvider extends BasicTimerReportProvider<CustomD
         return report;
     }
 
+
+    @Override
+    public Data[] supportedDataClasses()
+    {
+        return new Data[] {new CustomData()};
+    }
+    
     /**
      * {@inheritDoc}
      */

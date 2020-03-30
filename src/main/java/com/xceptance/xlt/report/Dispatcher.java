@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import com.xceptance.common.util.SimpleArrayList;
 import com.xceptance.common.util.SynchronizingCounter;
 import com.xceptance.xlt.api.engine.Data;
 
@@ -54,7 +55,7 @@ public class Dispatcher
     /**
      * The data record chunks waiting to be send to the statistics providers.
      */
-    private final BlockingQueue<List<Data>> dataRecordChunkQueue;
+    private final BlockingQueue<SimpleArrayList<Data>> dataRecordChunkQueue;
 
     /**
      * Size of the chunks in the queues
@@ -137,7 +138,7 @@ public class Dispatcher
      * @param dataRecordChunk
      *            the data record chunk
      */
-    public void addNewParsedDataRecordChunk(final List<Data> dataRecordChunk) throws InterruptedException
+    public void addNewParsedDataRecordChunk(final SimpleArrayList<Data> dataRecordChunk) throws InterruptedException
     {
         dataRecordChunkQueue.put(dataRecordChunk);
     }
@@ -147,9 +148,9 @@ public class Dispatcher
      *
      * @return the data record chunk
      */
-    public List<Data> getNextParsedDataRecordChunk() throws InterruptedException
+    public SimpleArrayList<Data> getNextParsedDataRecordChunk() throws InterruptedException
     {
-        final List<Data> data = dataRecordChunkQueue.take();
+        final SimpleArrayList<Data> data = dataRecordChunkQueue.take();
         return data;
     }
 

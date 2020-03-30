@@ -1,7 +1,6 @@
 package com.xceptance.xlt.report;
 
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -13,13 +12,11 @@ import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileType;
 
 import com.xceptance.common.util.StringMatcher;
-import com.xceptance.common.util.SynchronizingCounter;
 import com.xceptance.common.util.concurrent.DaemonThreadFactory;
 import com.xceptance.xlt.agent.CustomSamplersRunner;
 import com.xceptance.xlt.agent.JvmResourceUsageDataGenerator;
 import com.xceptance.xlt.api.report.ReportProvider;
 import com.xceptance.xlt.engine.util.TimerUtils;
-import com.xceptance.xlt.report.mergerules.RequestProcessingRule;
 
 /**
  * Processor for the chain file to log line to parsed log line via 

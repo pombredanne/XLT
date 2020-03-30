@@ -43,6 +43,13 @@ public class HostsReportProvider extends AbstractReportProvider
         return report;
     }
 
+
+    @Override
+    public Data[] supportedDataClasses()
+    {
+        return new Data[] {new RequestData()};
+    }
+    
     /**
      * {@inheritDoc}
      */

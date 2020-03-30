@@ -23,7 +23,9 @@ import org.jfree.data.time.TimeSeriesCollection;
 
 import com.xceptance.common.io.FileUtils;
 import com.xceptance.xlt.api.engine.ActionData;
+import com.xceptance.xlt.api.engine.CustomData;
 import com.xceptance.xlt.api.engine.Data;
+import com.xceptance.xlt.api.engine.PageLoadTimingData;
 import com.xceptance.xlt.api.engine.RequestData;
 import com.xceptance.xlt.api.engine.TimerData;
 import com.xceptance.xlt.api.engine.TransactionData;
@@ -379,6 +381,13 @@ public class ErrorsReportProvider extends AbstractReportProvider
         }
     }
 
+
+    @Override
+    public Data[] supportedDataClasses()
+    {
+        return new Data[] {new RequestData(), new ActionData(), new TransactionData(), new PageLoadTimingData(), new CustomData()};
+    }
+    
     /**
      * {@inheritDoc}
      */

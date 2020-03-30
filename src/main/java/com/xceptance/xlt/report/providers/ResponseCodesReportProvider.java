@@ -18,7 +18,7 @@ public class ResponseCodesReportProvider extends AbstractReportProvider
     /**
      * A mapping from response codes to their corresponding {@link ResponseCodeReport} objects.
      */
-    private final Map<Integer, ResponseCodeReport> responseCodeReports = new HashMap<Integer, ResponseCodeReport>();
+    private final Map<Integer, ResponseCodeReport> responseCodeReports = new HashMap<Integer, ResponseCodeReport>(13);
 
     /**
      * {@inheritDoc}
@@ -33,6 +33,13 @@ public class ResponseCodesReportProvider extends AbstractReportProvider
         return report;
     }
 
+
+    @Override
+    public Data[] supportedDataClasses()
+    {
+        return new Data[] {new RequestData()};
+    }
+    
     /**
      * {@inheritDoc}
      */

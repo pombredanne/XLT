@@ -62,13 +62,23 @@ import com.xceptance.xlt.api.engine.Data;
 public interface ReportProvider extends ReportCreator
 {
     /**
+     * Announce what data classes are desired. The framework won't sent anything else
+     * to processDataRecord to make the system faster. This could be static but would be 
+     * not an interface anymore, hence we put it here, won't be called often, only 
+     * during setup. So a dynamic change won't work!
+     * 
+     * @return an array of supported data classes
+     */
+    public Data[] supportedDataClasses();
+    
+    /**
      * Processes the passed data record to gather information needed for the test report. Typically, only some internal
      * statistics will be updated.
      * 
      * @param data
      *            the data record to process
      */
-    public void processDataRecord(Data data);
+    public void processDataRecord(final Data data);
 
     /**
      * Sets the report provider's configuration. Use the configuration object to get access to general as well as
@@ -77,5 +87,5 @@ public interface ReportProvider extends ReportCreator
      * @param config
      *            the report provider configuration
      */
-    public void setConfiguration(ReportProviderConfiguration config);
+    public void setConfiguration(final ReportProviderConfiguration config);
 }

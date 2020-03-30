@@ -139,6 +139,13 @@ public class ConfigurationReportProvider extends AbstractReportProvider
         return properties;
     }
 
+
+    @Override
+    public Data[] supportedDataClasses()
+    {
+        return new Data[] {};
+    }
+    
     /**
      * {@inheritDoc}
      */

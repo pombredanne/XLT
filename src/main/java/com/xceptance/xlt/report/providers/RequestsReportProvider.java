@@ -109,6 +109,12 @@ public class RequestsReportProvider extends BasicTimerReportProvider<RequestData
         }
     }
 
+    @Override
+    public Data[] supportedDataClasses()
+    {
+        return new Data[] {new RequestData()};
+    }
+    
     /**
      * {@inheritDoc}
      */

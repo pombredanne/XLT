@@ -106,7 +106,7 @@ class DataRecordParser implements Runnable
                 final List<String> lines = lineChunk.getLines();
 
                 // parse the chunk of lines and preprocess the results
-                final List<Data> dataRecordChunk = new SimpleArrayList<>(lines.size());
+                final SimpleArrayList<Data> dataRecordChunk = new SimpleArrayList<>(lines.size());
 
                 int lineNumber = lineChunk.getBaseLineNumber();
 
