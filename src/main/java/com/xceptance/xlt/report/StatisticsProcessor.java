@@ -6,10 +6,12 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.glassfish.tyrus.core.ExecutorServiceProvider;
 
 import com.xceptance.common.util.concurrent.DaemonThreadFactory;
 import com.xceptance.xlt.api.engine.Data;
@@ -40,13 +42,8 @@ class StatisticsProcessor
      * The configured report providers. An array for less overhead.
      */
     private final List<ReportProvider> reportProviders;
-
-    private final ExecutorService  statisticsMaintenanceExecutor;
-
-    /**
-     * A thread based random pool.
-     */
-    private final ThreadLocal<ReportProvider[]> shuffeledReportProviders;
+    private final List<ExecutorService> reportProvidersExecutors;
+    private final ExecutorService statisticsMaintenanceExecutor;
     
     /**
      * Constructor.
@@ -59,23 +56,18 @@ class StatisticsProcessor
     public StatisticsProcessor(final List<ReportProvider> reportProviders)
     {
         this.reportProviders = reportProviders;
-        
-        shuffeledReportProviders = new ThreadLocal<ReportProvider[]>()
-        {
-            @Override
-            protected ReportProvider[] initialValue()
-            {
-                final List<ReportProvider> localList = new ArrayList<>(reportProviders);
-                Collections.shuffle(localList);
-                
-                return localList.toArray(new ReportProvider[0]);
-            }
-        };
+        this.reportProvidersExecutors = new ArrayList<>();
 
+        for (int i = 0; i < reportProviders.size(); i++)
+        {
+            final ReportProvider r = reportProviders.get(i);
+            reportProvidersExecutors.add(Executors.newSingleThreadExecutor(new DaemonThreadFactory(c -> r.getClass().getSimpleName() + "-" + c)));
+        }
+        
+        statisticsMaintenanceExecutor = Executors.newSingleThreadExecutor(new DaemonThreadFactory(c -> "StatisticsMaintenance-" + c));
+        
         maximumTime = 0;
         minimumTime = Long.MAX_VALUE;
-        
-        this.statisticsMaintenanceExecutor = Executors.newSingleThreadExecutor(new DaemonThreadFactory(i -> "StatisticsMaintenance-" + i));
     }
 
     /**
@@ -100,21 +92,20 @@ class StatisticsProcessor
 
     public void run(final List<Data> data)
     {
-        final Future<?> statisticsMaintenanceTask = statisticsMaintenanceExecutor.submit(() -> 
+        final List<Future<?>> tasks = new ArrayList<>();
+        
+        tasks.add(statisticsMaintenanceExecutor.submit(() -> 
         {
             maintainStatistics(data);
-        });
+        }));
         
-        final int size = data.size();
-
-        final ReportProvider[] reportProviders = shuffeledReportProviders.get();        
-
-        for (int i = 0; i < reportProviders.length; i++)
+        for (int i = 0; i < reportProviders.size(); i++)
         {
-            final ReportProvider reportProvider = reportProviders[i];
-
-            synchronized(reportProvider)
+            final ReportProvider reportProvider = reportProviders.get(i);
+            
+            tasks.add(reportProvidersExecutors.get(i).submit(() ->
             {
+                final int size = data.size();
                 for (int d = 0; d < size; d++)
                 {
                     final Data record = data.get(d);
@@ -128,22 +119,25 @@ class StatisticsProcessor
                         LOG.error("Failed to process data record", t);
                     }
                 }
-            }
+            }));
         }
 
-        try
+        for (int i = 0; i < tasks.size(); i++)
         {
-            statisticsMaintenanceTask.get();
-        }
-        catch (InterruptedException e)
-        {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        catch (ExecutionException e)
-        {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            try
+            {
+                tasks.get(i).get();
+            }
+            catch (InterruptedException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            catch (ExecutionException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
     }
 
