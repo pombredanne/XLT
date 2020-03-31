@@ -52,11 +52,6 @@ public class Dispatcher
     private final BlockingQueue<LineChunk> lineChunkQueue;
 
     /**
-     * The data record chunks waiting to be send to the statistics providers.
-     */
-    private final BlockingQueue<List<Data>> dataRecordChunkQueue;
-
-    /**
      * Size of the chunks in the queues
      */
     public final int chunkSize;
@@ -67,6 +62,11 @@ public class Dispatcher
     private final ProgressBar progressBar = new ProgressBar("Reading", 100, ProgressBarStyle.ASCII);
    
     /**
+     * Where the processed data goes for counting
+     */
+    private final StatisticsProcessor statisticsProcessor;
+    
+    /**
      * Creates a new {@link Dispatcher} object with the given thread limit.
      *
      * @param directoriesToBeProcessed
@@ -74,11 +74,11 @@ public class Dispatcher
      * @param maxActiveThreads
      *            the maximum number of active threads
      */
-    public Dispatcher(final ReportGeneratorConfiguration config)
+    public Dispatcher(final ReportGeneratorConfiguration config, final StatisticsProcessor statisticsProcessor)
     {
         lineChunkQueue = new LinkedBlockingQueue<>(config.threadQueueLength);
-        dataRecordChunkQueue = new LinkedBlockingQueue<>(config.threadQueueLength);
         chunkSize = config.threadQueueBucketSize;
+        this.statisticsProcessor = statisticsProcessor;
     }
 
     /**
@@ -132,31 +132,21 @@ public class Dispatcher
     }
 
     /**
-     * Adds a new chunk of parsed data records for further processing. Called by a parser thread.
+     * Delivers a parsed chunk of data and puts it through the statisics processors
      *
      * @param dataRecordChunk
      *            the data record chunk
      */
     public void addNewParsedDataRecordChunk(final List<Data> dataRecordChunk) throws InterruptedException
     {
-        dataRecordChunkQueue.put(dataRecordChunk);
-    }
-
-    /**
-     * Returns a chunk of parsed data records for further processing. Called by a processor thread.
-     *
-     * @return the data record chunk
-     */
-    public List<Data> getNextParsedDataRecordChunk() throws InterruptedException
-    {
-        final List<Data> data = dataRecordChunkQueue.take();
-        return data;
+        statisticsProcessor.run(dataRecordChunk);
+        finishedProcessing();
     }
 
     /**
      * Indicates that a processor thread has finished processing. Called by a processor thread.
      */
-    public void finishedProcessing()
+    private void finishedProcessing()
     {
         chunksToBeProcessed.decrement();
     }

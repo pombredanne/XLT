@@ -156,7 +156,7 @@ public abstract class AbstractReader<T>
         System.out.printf("Data records read: %,d (%,d ms) - (%d lines/s)\n", 
                           getLineCount(), 
                           duration,
-                          (int) (Math.floor(getLineCount() / durationInSeconds)));
+                          Math.floor((double)getLineCount() / (double)durationInSeconds));
     }
 
     /**

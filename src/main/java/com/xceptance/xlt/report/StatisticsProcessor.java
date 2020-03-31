@@ -1,13 +1,17 @@
 package com.xceptance.xlt.report;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.xceptance.common.util.concurrent.DaemonThreadFactory;
 import com.xceptance.xlt.api.engine.Data;
 import com.xceptance.xlt.api.report.ReportProvider;
 
@@ -15,17 +19,12 @@ import com.xceptance.xlt.api.report.ReportProvider;
  * Processes parsed data records. Processing means passing a data record to all configured report providers. Since data
  * processing is not thread-safe (yet), there will be only one data processor.
  */
-class StatisticsProcessor implements Runnable
+class StatisticsProcessor
 {
     /**
      * Class logger.
      */
     private static final Log LOG = LogFactory.getLog(StatisticsProcessor.class);
-
-    /**
-     * The dispatcher that coordinates result processing.
-     */
-    private final Dispatcher dispatcher;
 
     /**
      * Creation time of last data record.
@@ -40,13 +39,14 @@ class StatisticsProcessor implements Runnable
     /**
      * The configured report providers. An array for less overhead.
      */
-    private final ReportProvider[] reportProviders;
+    private final List<ReportProvider> reportProviders;
+
+    private final ExecutorService  statisticsMaintenanceExecutor;
 
     /**
-     * A thread limit given from the outside
+     * A thread based random pool.
      */
-    private final int threadCount;
-    
+    private final ThreadLocal<ReportProvider[]> shuffeledReportProviders;
     
     /**
      * Constructor.
@@ -56,14 +56,26 @@ class StatisticsProcessor implements Runnable
      * @param dispatcher
      *            the dispatcher that coordinates result processing
      */
-    public StatisticsProcessor(final List<ReportProvider> reportProviders, final Dispatcher dispatcher, int threadCount)
+    public StatisticsProcessor(final List<ReportProvider> reportProviders)
     {
-        this.reportProviders = reportProviders.toArray(new ReportProvider[0]);
-        this.dispatcher = dispatcher;
+        this.reportProviders = reportProviders;
+        
+        shuffeledReportProviders = new ThreadLocal<ReportProvider[]>()
+        {
+            @Override
+            protected ReportProvider[] initialValue()
+            {
+                final List<ReportProvider> localList = new ArrayList<>(reportProviders);
+                Collections.shuffle(localList);
+                
+                return localList.toArray(new ReportProvider[0]);
+            }
+        };
 
         maximumTime = 0;
         minimumTime = Long.MAX_VALUE;
-        this.threadCount = threadCount;
+        
+        this.statisticsMaintenanceExecutor = Executors.newSingleThreadExecutor(new DaemonThreadFactory(i -> "StatisticsMaintenance-" + i));
     }
 
     /**
@@ -86,63 +98,52 @@ class StatisticsProcessor implements Runnable
         return (minimumTime == Long.MAX_VALUE) ? 0 : minimumTime;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void run()
+    public void run(final List<Data> data)
     {
-        // use the recommendation from the outside
-        final ForkJoinPool pool = new ForkJoinPool(threadCount);
-
-        while (true)
+        final Future<?> statisticsMaintenanceTask = statisticsMaintenanceExecutor.submit(() -> 
         {
-            try
+            maintainStatistics(data);
+        });
+        
+        final int size = data.size();
+
+        final ReportProvider[] reportProviders = shuffeledReportProviders.get();        
+
+        for (int i = 0; i < reportProviders.length; i++)
+        {
+            final ReportProvider reportProvider = reportProviders[i];
+
+            synchronized(reportProvider)
             {
-                // get a chunk of parsed data records
-                final List<Data> dataRecords = dispatcher.getNextParsedDataRecordChunk();
-
-                // submit this to all report providers and each provider does its own loop
-                // we assume that they are independent of each other and hence this is ok
-                final ForkJoinTask<?>[] tasks = new ForkJoinTask[reportProviders.length];
-                for (int i = 0; i < reportProviders.length; i++)
+                for (int d = 0; d < size; d++)
                 {
-                    final ReportProvider reportProvider = reportProviders[i];
-
-                    // give all data to each process threads for one report provider aka SIMD
-                    // single instruction multiple data
-                    final ForkJoinTask<?> task = pool.submit(() -> {
-                        processDataRecords(reportProvider, dataRecords);
-                    });
-                    tasks[i] = task;
+                    final Data record = data.get(d);
+                    
+                    try
+                    {
+                        reportProvider.processDataRecord(record);
+                    }
+                    catch (final Throwable t)
+                    {
+                        LOG.error("Failed to process data record", t);
+                    }
                 }
-
-                maintainStatistics(dataRecords);
-
-                // wait for completion
-                for (int i = 0; i < tasks.length; i++)
-                {
-                    tasks[i].quietlyJoin();
-                }
-
-                // one more chunk is complete
-                dispatcher.finishedProcessing();
-            }
-            catch (final InterruptedException e)
-            {
-                break;
             }
         }
 
-        // clean up
-        pool.shutdown();
         try
         {
-            // that should not be necessary, but for the argument of it
-            pool.awaitTermination(20, TimeUnit.SECONDS);
+            statisticsMaintenanceTask.get();
         }
-        catch (InterruptedException e1)
+        catch (InterruptedException e)
         {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        catch (ExecutionException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
     }
 
@@ -177,7 +178,7 @@ class StatisticsProcessor implements Runnable
      * @param data
      *            the data records
      */
-    private void maintainStatistics(final List<Data> data)
+    private synchronized void maintainStatistics(final List<Data> data)
     {
         long min = minimumTime;
         long max = maximumTime;
@@ -193,7 +194,7 @@ class StatisticsProcessor implements Runnable
             max = Math.max(max, time);
         }
 
-        minimumTime = Math.min(minimumTime, min);
-        maximumTime = Math.max(maximumTime, max);
+        minimumTime = min;
+        maximumTime = max;
     }
 }

@@ -8,8 +8,14 @@ import java.util.ListIterator;
 
 public class SimpleArrayList<T> implements List<T>
 {
-    private Object[] data;
-    private int size;
+    Object[] data;
+    int size;
+
+    SimpleArrayList(final SimpleArrayList<T> list)
+    {
+        data = list.data;
+        size = list.size;
+    }
     
     public SimpleArrayList(int capacity)
     {
@@ -37,7 +43,7 @@ public class SimpleArrayList<T> implements List<T>
     {
         return (T) data[index];
     }
-    
+
     public int size()
     {
         return size;
@@ -48,7 +54,79 @@ public class SimpleArrayList<T> implements List<T>
     {
         return (T[]) Arrays.copyOf(data, size);
     }
+    
+    /**
+     * Returns view partitions on the underlying list. If the count is larger than size
+     * you get back the maximum possible list number with one element each. If count 
+     * is 0 or smaller, we correct it to 1.
+     * 
+     * @param count how many list do we want
+     * @return a list of lists
+     */
+    public List<List<T>> partition(int count)
+    {
+        final int _count;
+        if (count > size)
+        {
+            _count = size;
+        }
+        else
+        {
+            _count = count <= 0 ? 1 : count;
+        }
+        
+        final SimpleArrayList<List<T>> result = new SimpleArrayList<>(count);
+        
+        final int newSize = (int) Math.ceil((double) size / (double) _count); 
+        for (int i = 0; i < _count; i++)
+        {
+            int from = i * newSize;
+            int to = from + newSize - 1;
+            if (to >= size)
+            {
+                to = size - 1; 
+            }
+            result.add(new Partition<>(this, from, to));
+        }
+        
+        return result;
+    }
+    
+    class Partition<K> extends SimpleArrayList<K>
+    {
+        private final int from;
+        private final int size;
+        
+        public Partition(final SimpleArrayList<K> list, final int from, final int to)
+        {
+            super(list);
+            
+            this.from = from;
+            this.size = to - from + 1;
+        }
+     
+        public boolean add(K o)
+        {
+            throw new RuntimeException("Cannot modify the partition");
+        }
+        
+        public K get(int index)
+        {
+            return (K) super.get(index + from);
+        }
 
+        public int size()
+        {
+            return size;
+        }
+        
+        public K[] toArray() 
+        {
+            throw new RuntimeException("Cannot modify the partition");
+        }
+        
+    }
+    
     @Override
     public boolean isEmpty()
     {
