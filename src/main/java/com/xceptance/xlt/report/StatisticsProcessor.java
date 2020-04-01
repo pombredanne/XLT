@@ -97,21 +97,21 @@ class StatisticsProcessor
             maintainStatistics(data);
         }));
         
-        // split it
-        final List<List<Data>> subLists = data.partition(2);
-
-        for (int l = 0; l < subLists.size(); l++)
+        for (int i = 0; i < reportProviders.size(); i++)
         {
-            final List<Data> subList = subLists.get(l);
-
-            for (int i = 0; i < reportProviders.size(); i++)
+            final ReportProvider reportProvider = reportProviders.get(i);
+            
+            tasks.add(statisticsMaintenanceExecutor.submit(() ->
             {
-                final ReportProvider reportProvider = reportProviders.get(i);
-
-                tasks.add(statisticsMaintenanceExecutor.submit(() ->
+                // split it
+                final List<List<Data>> subLists = data.partition(100);
+                
+                for (int l = 0; l < subLists.size(); l++)
                 {
                     synchronized(reportProvider)
                     {
+                        final List<Data> subList = subLists.get(l);
+                        
                         final int size = subList.size();
                         for (int d = 0; d < size; d++)
                         {
@@ -127,8 +127,8 @@ class StatisticsProcessor
                             }
                         }
                     }
-                }));
-            }
+                }
+            }));
         }
 
         for (int i = 0; i < tasks.size(); i++)
