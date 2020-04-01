@@ -394,6 +394,13 @@
             <version>0.8.1</version>
         </dependency>
 
+<dependency>
+    <groupId>org.threadly</groupId>
+    <artifactId>threadly</artifactId>
+    <version>6.0</version>
+</dependency>
+
+
         <!-- ================= -->
         <!-- Test dependencies -->
         <!-- ================= -->

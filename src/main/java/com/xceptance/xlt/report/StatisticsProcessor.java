@@ -9,6 +9,7 @@ import java.util.concurrent.Future;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.threadly.concurrent.wrapper.KeyDistributedExecutor;
 
 import com.xceptance.common.util.SimpleArrayList;
 import com.xceptance.common.util.concurrent.DaemonThreadFactory;
@@ -40,8 +41,7 @@ class StatisticsProcessor
      * The configured report providers. An array for less overhead.
      */
     private final List<ReportProvider> reportProviders;
-    private final List<ExecutorService> reportProvidersExecutors;
-    private final ExecutorService statisticsMaintenanceExecutor;
+    private final KeyDistributedExecutor statisticsMaintenanceExecutor;
     
     /**
      * Constructor.
@@ -54,15 +54,8 @@ class StatisticsProcessor
     public StatisticsProcessor(final List<ReportProvider> reportProviders, final int threadCount)
     {
         this.reportProviders = reportProviders;
-        this.reportProvidersExecutors = new ArrayList<>();
 
-        for (int i = 0; i < reportProviders.size(); i++)
-        {
-            final ReportProvider r = reportProviders.get(i);
-            reportProvidersExecutors.add(Executors.newSingleThreadExecutor(new DaemonThreadFactory(c -> r.getClass().getSimpleName() + "-" + c)));
-        }
-        
-        statisticsMaintenanceExecutor = Executors.newFixedThreadPool(threadCount);
+        statisticsMaintenanceExecutor = new KeyDistributedExecutor(Executors.newFixedThreadPool(threadCount));
         
         maximumTime = 0;
         minimumTime = Long.MAX_VALUE;
@@ -92,43 +85,40 @@ class StatisticsProcessor
     {
         final List<Future<?>> tasks = new ArrayList<>();
         
-        tasks.add(statisticsMaintenanceExecutor.submit(() -> 
+        tasks.add(statisticsMaintenanceExecutor.submit(data, () -> 
         {
             maintainStatistics(data);
         }));
+        
+        // split it
+        final List<List<Data>> subLists = data.partition(10);
         
         for (int i = 0; i < reportProviders.size(); i++)
         {
             final ReportProvider reportProvider = reportProviders.get(i);
             
-            tasks.add(statisticsMaintenanceExecutor.submit(() ->
+            for (int l = 0; l < subLists.size(); l++)
             {
-                // split it
-                final List<List<Data>> subLists = data.partition(10);
+                final List<Data> subList = subLists.get(l);
                 
-                for (int l = 0; l < subLists.size(); l++)
+                tasks.add(statisticsMaintenanceExecutor.submit(reportProvider, () ->
                 {
-                    synchronized(reportProvider)
+                    final int size = subList.size();
+                    for (int d = 0; d < size; d++)
                     {
-                        final List<Data> subList = subLists.get(l);
-                        
-                        final int size = subList.size();
-                        for (int d = 0; d < size; d++)
-                        {
-                            final Data record = subList.get(d);
+                        final Data record = subList.get(d);
 
-                            try
-                            {
-                                reportProvider.processDataRecord(record);
-                            }
-                            catch (final Throwable t)
-                            {
-                                LOG.error("Failed to process data record", t);
-                            }
+                        try
+                        {
+                            reportProvider.processDataRecord(record);
+                        }
+                        catch (final Throwable t)
+                        {
+                            LOG.error("Failed to process data record", t);
                         }
                     }
-                }
-            }));
+                }));
+            }
         }
 
         for (int i = 0; i < tasks.size(); i++)
