@@ -123,7 +123,7 @@ public class DataProcessor
         agentFilter = new StringMatcher(agentIncludePatternList, agentExcludePatternList, true);
 
         // the one and only data record processor
-        dataRecordProcessor = new StatisticsProcessor(reportProviders);
+        dataRecordProcessor = new StatisticsProcessor(reportProviders, config.statisticsThreadCount);
 
         // create the dispatcher
         dispatcher = new Dispatcher(config, dataRecordProcessor);
@@ -192,12 +192,12 @@ public class DataProcessor
             dispatcher.waitForDataRecordProcessingToComplete();
 
             final long duration = TimerUtils.getTime() - start;
-            final int durationInSeconds = Math.max(1, (int) (duration / 1000));
+            
+            final int totalLines = totalLinesCounter.get();
+            final long linesPerSecond = (totalLinesCounter.get() * 1000l) / Math.max(1, (int) duration);
             
             LOG.info(String.format("Data records read: %,d (%,d ms) - (%,d lines/s)\n", 
-                              totalLinesCounter.get(), 
-                              duration,
-                              (int) (Math.floor(totalLinesCounter.get() / durationInSeconds))));
+                                   totalLines, duration, linesPerSecond));
         }
         catch (final Exception e)
         {

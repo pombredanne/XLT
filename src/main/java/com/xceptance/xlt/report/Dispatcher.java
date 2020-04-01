@@ -1,9 +1,9 @@
 package com.xceptance.xlt.report;
 
-import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import com.xceptance.common.util.SimpleArrayList;
 import com.xceptance.common.util.SynchronizingCounter;
 import com.xceptance.xlt.api.engine.Data;
 
@@ -24,7 +24,7 @@ public class Dispatcher
     /**
      * The maximum number of lines in a chunk.
      */
-    public static final int DEFAULT_QUEUE_CHUNK_SIZE = 1000;
+    public static final int DEFAULT_QUEUE_CHUNK_SIZE = 20_000;
 
     /**
      * The maximum number of lines in a chunk.
@@ -137,7 +137,7 @@ public class Dispatcher
      * @param dataRecordChunk
      *            the data record chunk
      */
-    public void addNewParsedDataRecordChunk(final List<Data> dataRecordChunk) throws InterruptedException
+    public void addNewParsedDataRecordChunk(final SimpleArrayList<Data> dataRecordChunk) throws InterruptedException
     {
         statisticsProcessor.run(dataRecordChunk);
         finishedProcessing();

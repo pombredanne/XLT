@@ -85,6 +85,20 @@ CustomTimersReportProvider: 24,909,446 (23,449 ms) - (1,083,019 lines/s)
 ErrorsReportProvider:       24,909,446 (23,976 ms) - (1,083,019 lines/s)
 ResponseCodesReportProvider:24,909,446 (22,536 ms) - (1,132,247 lines/s)
 
+T450s - New Threading without StatisticsProcessor Queue in front
+1000 chunks, 50 queue, slowest provider first - 24,909,446 (50,136 ms) - (498,188 lines/s)
+1000 chunks, 50 queue, default order - 24,909,446 (49,580 ms) - (508,356 lines/s), Context I/V: 237713/490602
+1000 chunks, 50 queue, no providers - 24,909,446 (22,303 ms) - (1,132,247 lines/s)  
+10000 chunks, 50 queue, default order - 24,909,446 (48,873 ms) - (518,946 lines/s), Context I/V: 58404/79085
+20000 chunks, 50 queue, default order - 24,909,446 (46,291 ms) - (541,509 lines/s), Context I/V: 70259/79564
+20000 chunks, 50 queue, slowest first - 24,909,446 (47,425 ms) - (529,988 lines/s), Context I/V: 80682/82240
+
+T450s - Pool for statistics again with sync per provider
+20000 chunks, 50 queue, default order - 24,909,446 (46,745 ms) - (541,509 lines/s), Context I/V: 62452/48534
+
+One pool again, but with smaller chunks (split up data list) from all parsers
+20000 chunks, 50 queue, default order - 24,909,446 (37,062 ms) - (672,102 lines/s), Context I/V: 57424/44232 - fail
+
 
 #Idea
 * Providers announce what Data they want and get that only
