@@ -104,7 +104,7 @@ class StatisticsProcessor
             tasks.add(statisticsMaintenanceExecutor.submit(() ->
             {
                 // split it
-                final List<List<Data>> subLists = data.partition(100);
+                final List<List<Data>> subLists = data.partition(10);
                 
                 for (int l = 0; l < subLists.size(); l++)
                 {
