@@ -1,11 +1,10 @@
 package com.xceptance.xlt.report;
 
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -13,13 +12,11 @@ import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileType;
 
 import com.xceptance.common.util.StringMatcher;
-import com.xceptance.common.util.SynchronizingCounter;
 import com.xceptance.common.util.concurrent.DaemonThreadFactory;
 import com.xceptance.xlt.agent.CustomSamplersRunner;
 import com.xceptance.xlt.agent.JvmResourceUsageDataGenerator;
 import com.xceptance.xlt.api.report.ReportProvider;
 import com.xceptance.xlt.engine.util.TimerUtils;
-import com.xceptance.xlt.report.mergerules.RequestProcessingRule;
 
 /**
  * Processor for the chain file to log line to parsed log line via 
@@ -70,7 +67,7 @@ public class DataProcessor
     /**
      * The total number of lines/data records read.
      */
-    private final AtomicInteger totalLinesCounter = new AtomicInteger();
+    private final AtomicLong totalLinesCounter = new AtomicLong();
 
     /**
      * The filter to skip the results of certain test cases when reading.
@@ -192,12 +189,12 @@ public class DataProcessor
             dispatcher.waitForDataRecordProcessingToComplete();
 
             final long duration = TimerUtils.getTime() - start;
-            final int durationInSeconds = Math.max(1, (int) (duration / 1000));
+            final long linesPerSecond = Math.round((totalLinesCounter.get() / (double) duration) * 1000l); 
             
             LOG.info(String.format("Data records read: %,d (%,d ms) - (%,d lines/s)\n", 
                               totalLinesCounter.get(), 
                               duration,
-                              (int) (Math.floor(totalLinesCounter.get() / durationInSeconds))));
+                              linesPerSecond));
         }
         catch (final Exception e)
         {
@@ -277,7 +274,8 @@ public class DataProcessor
         
         // create a new reader for each user directory and enqueue it for execution
         final String userNumber = testUserDir.getName().getBaseName();
-        final DataRecordReader reader = new DataRecordReader(testUserDir, agentName, testCaseName, userNumber, totalLinesCounter,
+        final DataRecordReader reader = new DataRecordReader(testUserDir, agentName, testCaseName, userNumber, 
+                                                             totalLinesCounter,
                                                              dispatcher);
         dataRecordReaderExecutor.execute(reader);
     }
