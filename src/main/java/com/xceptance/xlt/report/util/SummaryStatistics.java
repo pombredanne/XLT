@@ -44,20 +44,13 @@ public class SummaryStatistics
      */
     public void addValue(final int value)
     {
-        // turn this into an integer multiplication first and cast later
-        sumOfSquares += (double) ((long) value * (long) value);
-        count++;
+        sumOfSquares += Math.pow(value, 2);
         sum += value;
 
-        if (value > maximum)
-        {
-            maximum = value;
-        }
+        maximum = Math.max(maximum, value);
+        minimum = Math.min(minimum, value);
 
-        if (value < minimum)
-        {
-            minimum = value;
-        }
+        count++;
     }
 
     /**
