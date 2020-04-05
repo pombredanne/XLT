@@ -181,7 +181,7 @@ public class GeneralReportProvider extends AbstractReportProvider
             final RequestData reqData = (RequestData) data;
             final long time = reqData.getTime();
             final long endTime = reqData.getEndTime();
-            final long runTime = reqData.getRunTime();
+            final int runTime = reqData.getRunTime();
             final long sendCompletedAt = time + reqData.getConnectTime() + reqData.getSendTime();
 
             totalBytesSent += reqData.getBytesSent();
@@ -192,7 +192,7 @@ public class GeneralReportProvider extends AbstractReportProvider
             totalRequests++;
             requestsValueSet.addOrUpdateValue(endTime, 1);
 
-            requestRunTimeValueSet.addOrUpdateValue(endTime, (int) runTime);
+            requestRunTimeValueSet.addOrUpdateValue(endTime, runTime);
 
             if (slowestRequestsTracker != null)
             {

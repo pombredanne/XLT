@@ -178,7 +178,7 @@ public class BasicTimerDataProcessor extends AbstractDataProcessor
 
         // we record the data at the time the timer has finished
         final long endTime = timerStats.getEndTime();
-        final int runTime = (int) timerStats.getRunTime();
+        final int runTime = timerStats.getRunTime();
 
         // update the stats
         runTimeHistogram.addValue(runTime);
