@@ -1,7 +1,6 @@
 package com.xceptance.common.util;
 
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
