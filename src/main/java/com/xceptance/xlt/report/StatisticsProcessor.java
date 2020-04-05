@@ -1,18 +1,16 @@
 package com.xceptance.xlt.report;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.glassfish.tyrus.core.ExecutorServiceProvider;
+import org.threadly.concurrent.wrapper.KeyDistributedExecutor;
 
+import com.xceptance.common.util.SimpleArrayList;
 import com.xceptance.common.util.concurrent.DaemonThreadFactory;
 import com.xceptance.xlt.api.engine.Data;
 import com.xceptance.xlt.api.report.ReportProvider;
@@ -42,9 +40,9 @@ class StatisticsProcessor
      * The configured report providers. An array for less overhead.
      */
     private final List<ReportProvider> reportProviders;
-    private final List<ExecutorService> reportProvidersExecutors;
-    private final ExecutorService statisticsMaintenanceExecutor;
-    
+    //    private final List<ExecutorService> reportProvidersExecutors;
+    private final KeyDistributedExecutor statisticsMaintenanceExecutor;
+
     /**
      * Constructor.
      *
@@ -53,19 +51,19 @@ class StatisticsProcessor
      * @param dispatcher
      *            the dispatcher that coordinates result processing
      */
-    public StatisticsProcessor(final List<ReportProvider> reportProviders)
+    public StatisticsProcessor(final List<ReportProvider> reportProviders, final int threadCount)
     {
         this.reportProviders = reportProviders;
-        this.reportProvidersExecutors = new ArrayList<>();
+        //        this.reportProvidersExecutors = new ArrayList<>();
+        //
+        //        for (int i = 0; i < reportProviders.size(); i++)
+        //        {
+        //            final ReportProvider r = reportProviders.get(i);
+        //            reportProvidersExecutors.add(Executors.newSingleThreadExecutor(new DaemonThreadFactory(c -> r.getClass().getSimpleName() + "-" + c)));
+        //        }
 
-        for (int i = 0; i < reportProviders.size(); i++)
-        {
-            final ReportProvider r = reportProviders.get(i);
-            reportProvidersExecutors.add(Executors.newSingleThreadExecutor(new DaemonThreadFactory(c -> r.getClass().getSimpleName() + "-" + c)));
-        }
-        
-        statisticsMaintenanceExecutor = Executors.newSingleThreadExecutor(new DaemonThreadFactory(c -> "StatisticsMaintenance-" + c));
-        
+        statisticsMaintenanceExecutor = new KeyDistributedExecutor(Executors.newFixedThreadPool(threadCount, new DaemonThreadFactory(c -> "Providers-" + c)));
+
         maximumTime = 0;
         minimumTime = Long.MAX_VALUE;
     }
@@ -90,26 +88,26 @@ class StatisticsProcessor
         return (minimumTime == Long.MAX_VALUE) ? 0 : minimumTime;
     }
 
-    public void run(final List<Data> data)
+    public void run(final SimpleArrayList<Data> data)
     {
         final List<Future<?>> tasks = new ArrayList<>();
-        
-        tasks.add(statisticsMaintenanceExecutor.submit(() -> 
+
+        tasks.add(statisticsMaintenanceExecutor.submit(data, () -> 
         {
             maintainStatistics(data);
         }));
-        
+
         for (int i = 0; i < reportProviders.size(); i++)
         {
             final ReportProvider reportProvider = reportProviders.get(i);
-            
-            tasks.add(reportProvidersExecutors.get(i).submit(() ->
+
+            tasks.add(statisticsMaintenanceExecutor.submit(reportProvider, () ->
             {
                 final int size = data.size();
                 for (int d = 0; d < size; d++)
                 {
                     final Data record = data.get(d);
-                    
+
                     try
                     {
                         reportProvider.processDataRecord(record);

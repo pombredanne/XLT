@@ -394,6 +394,16 @@
             <version>0.8.1</version>
         </dependency>
 
+        <!--  
+            https://github.com/threadly/threadly
+            MPL-2.0
+         -->
+		<dependency>
+			<groupId>org.threadly</groupId>
+			<artifactId>threadly</artifactId>
+			<version>6.0</version>
+		</dependency>
+
         <!-- ================= -->
         <!-- Test dependencies -->
         <!-- ================= -->

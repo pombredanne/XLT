@@ -120,7 +120,7 @@ public class DataProcessor
         agentFilter = new StringMatcher(agentIncludePatternList, agentExcludePatternList, true);
 
         // the one and only data record processor
-        dataRecordProcessor = new StatisticsProcessor(reportProviders);
+        dataRecordProcessor = new StatisticsProcessor(reportProviders, config.statisticsThreadCount);
 
         // create the dispatcher
         dispatcher = new Dispatcher(config, dataRecordProcessor);
