@@ -1,8 +1,8 @@
 package com.xceptance.xlt.report.util;
 
-import java.util.BitSet;
 
 import com.xceptance.common.util.ParameterCheckUtils;
+import com.xceptance.xlt.report.util.lucene.OpenBitSet;
 
 /**
  * A {@link LowPrecisionIntValueSet} stores any number of distinct integer values out of [0..{@link Integer#MAX_VALUE}]
@@ -39,7 +39,7 @@ public class LowPrecisionIntValueSet
     /**
      * The bit set representing the buckets.
      */
-    private final BitSet bitSet;
+    private final OpenBitSet bitSet;
 
     /**
      * The number of buckets.
@@ -47,7 +47,7 @@ public class LowPrecisionIntValueSet
     private final int buckets;
 
     /**
-     * The value scaling factor. Always a power of 2.
+     * The value scaling factor. 2 pow scale.
      */
     private int scale;
 
@@ -70,8 +70,8 @@ public class LowPrecisionIntValueSet
     {
         this.buckets = buckets;
 
-        scale = 1;
-        bitSet = new BitSet(this.buckets);
+        scale = 0;
+        bitSet = new OpenBitSet(this.buckets);
     }
 
     /**
@@ -90,17 +90,17 @@ public class LowPrecisionIntValueSet
         }
 
         // adjust the value according to the current scale
-        value = value / scale;
+        value = value >> scale; // div
 
         // make the value fit into the bit set by scaling the bit set as necessary
         while (value >= buckets)
         {
             scale();
-            value = value / 2;
+            value = value >> 1; // 2
         }
 
         // finally set the corresponding bit
-        bitSet.set(value);
+        bitSet.fastSet(value);
     }
 
     /**
@@ -151,11 +151,19 @@ public class LowPrecisionIntValueSet
      */
     public double[] getValues()
     {
-        final double[] values = new double[bitSet.cardinality()];
+        final double[] values = new double[(int) bitSet.cardinality()];
 
-        for (int i = 0, j = bitSet.nextSetBit(0); i < values.length; i++, j = bitSet.nextSetBit(j + 1))
+        //        for (int i = 0, j = bitSet.nextSetBit(0); i < values.length; i++, j = bitSet.nextSetBit(j + 1))
+        //        {
+        //            values[i] = j << scale; // * scale
+        //        }
+
+        int x = 0;
+        for (int i = 0; i < values.length; i++) 
         {
-            values[i] = j * scale;
+            final int v = bitSet.nextSetBit(x);
+            values[i] = v << scale;
+            x = v + 1;
         }
 
         return values;
@@ -217,18 +225,25 @@ public class LowPrecisionIntValueSet
      */
     private void scale()
     {
-        scale = scale * 2;
+        scale++;
 
         // merge two consecutive bits into one
         for (int i = 0; i < buckets; i += 2)
         {
-            final int bitIndex = i / 2;
-            final boolean bitValue = bitSet.get(i) || bitSet.get(i + 1);
+            final int bitIndex = i >> 1; // / 2
+            final boolean bitValue = bitSet.fastGet(i) || bitSet.fastGet(i + 1);
 
-            bitSet.set(bitIndex, bitValue);
+            if (bitValue)
+            {
+                bitSet.fastSet(bitIndex);
+            }
+            else
+            {
+                bitSet.fastClear(bitIndex);
+            }
         }
 
         // clear the second half of the bit set
-        bitSet.clear(buckets / 2, buckets);
+        bitSet.clear(buckets >> 1, buckets); // / 2
     }
 }

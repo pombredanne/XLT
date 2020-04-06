@@ -21,25 +21,18 @@ public class MinMaxValue
 
     /**
      * Constructor.
-     */
-    public MinMaxValue()
-    {
-    }
-
-    /**
-     * Constructor.
      * 
      * @param value
      *            the first value to add
      */
     public MinMaxValue(final int value)
     {
+        valueSet.addValue(value);
+
         accumulatedValue = value;
         maximum = value;
         minimum = value;
         valueCount = 1;
-
-        valueSet.addValue(value);
     }
 
     /**
@@ -59,14 +52,7 @@ public class MinMaxValue
      */
     public int getAverageValue()
     {
-        if (valueCount > 0)
-        {
-            return (int) (accumulatedValue / valueCount);
-        }
-        else
-        {
-            return 0;
-        }
+        return (int) (accumulatedValue / valueCount);
     }
 
     /**
@@ -127,18 +113,18 @@ public class MinMaxValue
      */
     MinMaxValue merge(final MinMaxValue item)
     {
-        if (item.getValueCount() > 0)
+        if (item != null)
         {
             // only, if we already have counted something
             maximum = Math.max(maximum, item.maximum);
             minimum = Math.min(minimum, item.minimum);
-
+    
             accumulatedValue += item.accumulatedValue;
             valueCount += item.valueCount;
-
+    
             valueSet.merge(item.valueSet);
         }
-
+            
         return this;
     }
 
@@ -159,28 +145,13 @@ public class MinMaxValue
      */
     public void updateValue(final int sample)
     {
-        // did we counted at all already?
-        if (valueCount > 0)
-        {
-            if (sample > maximum)
-            {
-                maximum = sample;
-            }
-            else if (sample < minimum)
-            {
-                minimum = sample;
-            }
-        }
-        else
-        {
-            maximum = sample;
-            minimum = sample;
-        }
+        valueSet.addValue(sample);
+
+        maximum = Math.max(maximum, sample);
+        minimum = Math.min(minimum, sample);
 
         accumulatedValue += sample;
         valueCount++;
-
-        valueSet.addValue(sample);
     }
 
     /**

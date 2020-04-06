@@ -8,13 +8,13 @@ public class MinMaxValueTest
     @Test
     public final void testMinMaxValue()
     {
-        final MinMaxValue set = new MinMaxValue();
+        final MinMaxValue set = new MinMaxValue(0);
         Assert.assertEquals(0, set.getAccumulatedValue());
         Assert.assertEquals(0, set.getAverageValue());
         Assert.assertEquals(0, set.getMaximumValue());
         Assert.assertEquals(0, set.getMinimumValue());
         Assert.assertEquals(0, set.getValue());
-        Assert.assertEquals(0, set.getValueCount());
+        Assert.assertEquals(1, set.getValueCount());
     }
 
     @Test
@@ -97,20 +97,6 @@ public class MinMaxValueTest
     }
 
     @Test
-    public final void testUpdateValue_0()
-    {
-        final MinMaxValue set = new MinMaxValue();
-        set.updateValue(2);
-
-        Assert.assertEquals(2, set.getAccumulatedValue());
-        Assert.assertEquals(2, set.getAverageValue());
-        Assert.assertEquals(2, set.getMaximumValue());
-        Assert.assertEquals(2, set.getMinimumValue());
-        Assert.assertEquals(2, set.getValue());
-        Assert.assertEquals(1, set.getValueCount());
-    }
-
-    @Test
     public final void testMerge()
     {
         final MinMaxValue set1 = new MinMaxValue(10);
@@ -132,51 +118,6 @@ public class MinMaxValueTest
         Assert.assertEquals(0, set.getMinimumValue());
         Assert.assertEquals(10, set.getValue());
         Assert.assertEquals(3, set.getValueCount());
-    }
-
-    @Test
-    public final void testMerge_0_0()
-    {
-        final MinMaxValue set1 = new MinMaxValue();
-        final MinMaxValue set2 = new MinMaxValue();
-
-        set1.merge(set2);
-        Assert.assertEquals(0, set1.getAccumulatedValue());
-        Assert.assertEquals(0, set1.getAverageValue());
-        Assert.assertEquals(0, set1.getMaximumValue());
-        Assert.assertEquals(0, set1.getMinimumValue());
-        Assert.assertEquals(0, set1.getValue());
-        Assert.assertEquals(0, set1.getValueCount());
-    }
-
-    @Test
-    public final void testMerge_0_1()
-    {
-        final MinMaxValue set1 = new MinMaxValue();
-        final MinMaxValue set2 = new MinMaxValue(1);
-
-        set1.merge(set2);
-        Assert.assertEquals(1, set1.getAccumulatedValue());
-        Assert.assertEquals(1, set1.getAverageValue());
-        Assert.assertEquals(1, set1.getMaximumValue());
-        Assert.assertEquals(1, set1.getMinimumValue());
-        Assert.assertEquals(1, set1.getValue());
-        Assert.assertEquals(1, set1.getValueCount());
-    }
-
-    @Test
-    public final void testMerge_1_0()
-    {
-        final MinMaxValue set1 = new MinMaxValue(1);
-        final MinMaxValue set2 = new MinMaxValue();
-
-        set1.merge(set2);
-        Assert.assertEquals(1, set1.getAccumulatedValue());
-        Assert.assertEquals(1, set1.getAverageValue());
-        Assert.assertEquals(1, set1.getMaximumValue());
-        Assert.assertEquals(1, set1.getMinimumValue());
-        Assert.assertEquals(1, set1.getValue());
-        Assert.assertEquals(1, set1.getValueCount());
     }
 
     @Test
