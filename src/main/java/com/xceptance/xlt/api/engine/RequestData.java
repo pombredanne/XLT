@@ -5,6 +5,8 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 import com.xceptance.common.lang.ParseNumbers;
+import com.xceptance.common.lang.StringHasher;
+import com.xceptance.xlt.engine.util.UrlUtils;
 
 /**
  * <p>
@@ -37,6 +39,11 @@ public class RequestData extends TimerData
      */
     private static final char IP_ADDRESSES_SEPARATOR = '|';
 
+    /**
+     * The value to show if the host could not be determined from a URL.
+     */
+    public static final String UNKNOWN_HOST = "(unknown)";
+    
     /**
      * The size of the response message in bytes.
      */
@@ -107,6 +114,16 @@ public class RequestData extends TimerData
      */
     private String url;
 
+    /**
+     * The hash code of a url without fragment, needed downstream
+     */
+    private int hashCodeOfUrlWithoutFragment;
+    
+    /**
+     * The host, parsed from the url early in the process
+     */
+    private String host;
+    
     /**
      * The HTTP-Method of this request.
      */
@@ -290,6 +307,27 @@ public class RequestData extends TimerData
         return url;
     }
 
+    /**
+     * Returns the hashcode of the fragment free version of the url
+     * 
+     * @return the hashcode of the fragment free url 
+     */
+    public int hashCodeOfUrlWithoutFragment()
+    {
+        return hashCodeOfUrlWithoutFragment;
+    }
+    
+    /**
+     * Returns the host parsed from the url or
+     * UNKNOWN_HOST if it does not exist. Never null or empty.
+     * 
+     * @return the host from the url
+     */
+    public String getHost()
+    {
+        return host;
+    }
+    
     /**
      * Returns the HTTP method of the request.
      * 
@@ -514,7 +552,20 @@ public class RequestData extends TimerData
      */
     public void setUrl(final String url)
     {
+        final String hostName = UrlUtils.retrieveHostFromUrl(url);
+        if (hostName == null || hostName.length() == 0)
+        {
+            host = UNKNOWN_HOST;
+        }
+        else
+        {   
+            host = hostName;
+        }
+        
         this.url = url;
+        
+        // remove the fragment if any and compute the hash
+        this.hashCodeOfUrlWithoutFragment = StringHasher.hashCodeWithLimit(url, '#');
     }
 
     /**
@@ -628,7 +679,7 @@ public class RequestData extends TimerData
 
         if (values.size() > 22)
         {
-            url = values.get(8);
+            setUrl(values.get(8));
             contentType = values.get(9);
 
             setConnectTime(ParseNumbers.parseInt(values.get(10)));

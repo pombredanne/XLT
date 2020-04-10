@@ -85,7 +85,43 @@ CustomTimersReportProvider: 24,909,446 (23,449 ms) - (1,083,019 lines/s)
 ErrorsReportProvider:       24,909,446 (23,976 ms) - (1,083,019 lines/s)
 ResponseCodesReportProvider:24,909,446 (22,536 ms) - (1,132,247 lines/s)
 
+T450s
+None - 24,909,446 (22,916 ms) - (1,086,989 lines/s) Context I/V: 45168/59234
+All  - 24,909,446 (54,576 ms) - (456,418 lines/s) Context I/V: 237777/496005
+
+Pool with sync on providers
+All  - 24,909,446 (51,169 ms) - (486,807 lines/s) Context I/V: 95376/182702
+
+Pool with sync on providers and 10 partitions
+All - 24,909,446 (67,272 ms) - (370,280 lines/s) Context I/V: 184052/994996
+
+As before but threadly and no partitions
+All - 24,909,446 (47,491 ms) - (524,509 lines/s) Context I/V: 90901/159721
+
+10k chunks
+All - 24,909,446 (49,374 ms) - (504,505 lines/s) Context I/V: 80224/47379
+
+No Host, No REquest
+24,909,446 (38,856 ms) - (641,071 lines/s) Context I/V: 44955/36344
+
+# Move of expensive to preprocessing
+##  20191022-230434 (24,909,446 records) - RAM Disk, T450s
+
+### Before
+All providers, no merge rules, 0-3, 24,909,446 (45,236 ms) - (550,655 lines/s)
+All providers, no merge rules, 0-3, 24,909,446 (45,608 ms) - (546,164 lines/s)
+
+### After Hostextractor
+All providers, no merge rules, 0-3, 24,909,446 (44,495 ms) - (559,826 lines/s)
+
+### After url hash move
+All providers, no merge rules, 0-3, 24,909,446 (43,134 ms) - (577,490 lines/s)
+
+
+
 
 #Idea
+* Move expensive stuff into data preprocessing out of providers
+* Give a provider only what it needs (only its typecodes)
 * Providers announce what Data they want and get that only
 * Give each line to all providers in a thread

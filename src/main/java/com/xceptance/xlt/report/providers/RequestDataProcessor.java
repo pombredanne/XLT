@@ -286,16 +286,13 @@ public class RequestDataProcessor extends BasicTimerDataProcessor
 
         if (countDistinctUrls)
         {
-            final String url = reqData.getUrl();
-            final int hash = StringHasher.hashCodeWithLimit(url, '#');
-
             // store the URL's hash code only to save space
-            distinctUrlHashCodeSet.add(hash);
+            distinctUrlHashCodeSet.add(reqData.hashCodeOfUrlWithoutFragment());
 
             // remember some URLs (up to the limit)
             if (distinctUrlSet.size() < MAXIMUM_NUMBER_OF_URLS)
             {
-                distinctUrlSet.add(url);
+                distinctUrlSet.add(reqData.getUrl());
             }
         }
 
