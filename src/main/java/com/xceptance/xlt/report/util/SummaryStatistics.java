@@ -44,7 +44,7 @@ public class SummaryStatistics
      */
     public void addValue(final int value)
     {
-        // turn this into an integer multiplication first and cast later
+        // use intrinics with the pow lib call
         sumOfSquares += Math.pow(value, 2);
         sum += value;
 
