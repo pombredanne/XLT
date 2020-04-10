@@ -11,8 +11,6 @@ import java.util.concurrent.ThreadFactory;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.xceptance.common.util.Getter;
-
 /**
  * @author rschwietzke
  */
@@ -55,9 +53,9 @@ public class DaemonThreadFactoryTest
         }
 
         Assert.assertEquals(3, results.size());
-        Assert.assertTrue(results.contains("0"));
-        Assert.assertTrue(results.contains("1"));
-        Assert.assertTrue(results.contains("2"));
+        Assert.assertTrue(results.contains("Thread-0"));
+        Assert.assertTrue(results.contains("Thread-1"));
+        Assert.assertTrue(results.contains("Thread-2"));
     }
 
     /**
@@ -75,7 +73,7 @@ public class DaemonThreadFactoryTest
         ExecutorService executorService = null;
         try
         {
-            final ThreadFactory threadFactory = new DaemonThreadFactory("foo-");
+            final ThreadFactory threadFactory = new DaemonThreadFactory(i -> "foo-" + i);
             executorService = Executors.newFixedThreadPool(5, threadFactory);
 
             results.add(executorService.submit(new TestCallable()).get());
@@ -109,14 +107,7 @@ public class DaemonThreadFactoryTest
         ExecutorService executorService = null;
         try
         {
-            final ThreadFactory threadFactory = new DaemonThreadFactory(new Getter<String>()
-            {
-                @Override
-                public String get()
-                {
-                    return "A38-";
-                }
-            });
+            final ThreadFactory threadFactory = new DaemonThreadFactory(i ->"A38-" + i);
 
             executorService = Executors.newFixedThreadPool(5, threadFactory);
 
