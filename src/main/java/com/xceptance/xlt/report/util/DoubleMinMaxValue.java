@@ -4,7 +4,7 @@ package com.xceptance.xlt.report.util;
  * A {@link DoubleMinMaxValue} stores the minimum/maximum/sum/count of all the sample values added, but can also
  * reproduce a rough approximation of the distinct values added.
  * 
- * @see MinMaxValue
+ * @see IntMinMaxValue
  * @author Hartmut Arlt (Xceptance Software Technologies GmbH)
  */
 public class DoubleMinMaxValue
@@ -20,7 +20,7 @@ public class DoubleMinMaxValue
     /**
      * Holds an approximation of the distinct values added to this min-max value.
      */
-    private final LowPrecisionDoubleValueSet valueSet = new LowPrecisionDoubleValueSet();
+    private final DoubleLowPrecisionValueSet valueSet = new DoubleLowPrecisionValueSet();
 
     /**
      * Constructor.

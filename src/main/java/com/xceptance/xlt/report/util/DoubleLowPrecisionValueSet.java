@@ -5,7 +5,7 @@ import java.util.BitSet;
 import org.apache.commons.lang3.ArrayUtils;
 
 /**
- * A {@link LowPrecisionDoubleValueSet} stores any number of distinct double values in a memory-efficient way, however,
+ * A {@link DoubleLowPrecisionValueSet} stores any number of distinct double values in a memory-efficient way, however,
  * at the cost of loosing precision. This means that values added to this set may not necessarily be returned precisely
  * as they were, but rough approximations of them only. This data structure is especially useful for charts, where we
  * often have to deal with many different values. Since the chart resolution is rather low, we can live with the
@@ -16,7 +16,7 @@ import org.apache.commons.lang3.ArrayUtils;
  * adjacent buckets to be merged into one. Since the underlying storage is always fixed, scaling has the negative side
  * effect of loosing precision.
  */
-public class LowPrecisionDoubleValueSet extends AbstractFixedSizeDoubleValueSet
+public class DoubleLowPrecisionValueSet extends AbstractFixedSizeDoubleValueSet
 {
     /**
      * The default number of buckets.
@@ -24,7 +24,7 @@ public class LowPrecisionDoubleValueSet extends AbstractFixedSizeDoubleValueSet
     static int DEFAULT_BUCKET_COUNT = 128;
 
     /**
-     * Sets the default number of buckets for new {@link LowPrecisionDoubleValueSet} objects.
+     * Sets the default number of buckets for new {@link DoubleLowPrecisionValueSet} objects.
      *
      * @param numberOfBuckets
      *            the number of buckets
@@ -40,22 +40,22 @@ public class LowPrecisionDoubleValueSet extends AbstractFixedSizeDoubleValueSet
     private final BitSet bitSet;
 
     /**
-     * Creates a {@link LowPrecisionDoubleValueSet} object with {@value LowPrecisionDoubleValueSet#DEFAULT_BUCKET_COUNT}
+     * Creates a {@link DoubleLowPrecisionValueSet} object with {@value DoubleLowPrecisionValueSet#DEFAULT_BUCKET_COUNT}
      * buckets.
      */
-    public LowPrecisionDoubleValueSet()
+    public DoubleLowPrecisionValueSet()
     {
         this(DEFAULT_BUCKET_COUNT);
     }
 
     /**
-     * Creates a {@link LowPrecisionDoubleValueSet} object with the given number of buckets, which must be a multiple of
+     * Creates a {@link DoubleLowPrecisionValueSet} object with the given number of buckets, which must be a multiple of
      * 2.
      *
      * @param numberOfBuckets
      *            the number of buckets
      */
-    public LowPrecisionDoubleValueSet(final int numberOfBuckets)
+    public DoubleLowPrecisionValueSet(final int numberOfBuckets)
     {
         super(numberOfBuckets);
 
@@ -148,7 +148,7 @@ public class LowPrecisionDoubleValueSet extends AbstractFixedSizeDoubleValueSet
      * @param other
      *            the other set
      */
-    public void merge(final LowPrecisionDoubleValueSet other)
+    public void merge(final DoubleLowPrecisionValueSet other)
     {
         for (final double value : other.getValues())
         {
@@ -186,7 +186,7 @@ public class LowPrecisionDoubleValueSet extends AbstractFixedSizeDoubleValueSet
         {
             return false;
         }
-        LowPrecisionDoubleValueSet other = (LowPrecisionDoubleValueSet) obj;
+        DoubleLowPrecisionValueSet other = (DoubleLowPrecisionValueSet) obj;
         if (bitSet == null)
         {
             if (other.bitSet != null)

@@ -1,10 +1,10 @@
 package com.xceptance.xlt.report.util;
 
 /**
- * A {@link MinMaxValue} stores the minimum/maximum/sum/count of all the sample values added, but can also reproduce a
+ * A {@link IntMinMaxValue} stores the minimum/maximum/sum/count of all the sample values added, but can also reproduce a
  * rough approximation of the distinct values added.
  */
-public class MinMaxValue
+public class IntMinMaxValue
 {
     private long accumulatedValue;
 
@@ -17,7 +17,7 @@ public class MinMaxValue
     /**
      * Holds an approximation of the distinct values added to this min-max value.
      */
-    private final LowPrecisionIntValueSet valueSet = new LowPrecisionIntValueSet();
+    private final IntLowPrecisionValueSet valueSet = new IntLowPrecisionValueSet();
 
     /**
      * Constructor.
@@ -25,7 +25,7 @@ public class MinMaxValue
      * @param value
      *            the first value to add
      */
-    public MinMaxValue(final int value)
+    public IntMinMaxValue(final int value)
     {
         valueSet.addValue(value);
 
@@ -111,7 +111,7 @@ public class MinMaxValue
      * @param item
      *            the other value
      */
-    MinMaxValue merge(final MinMaxValue item)
+    IntMinMaxValue merge(final IntMinMaxValue item)
     {
         if (item != null)
         {
@@ -172,7 +172,7 @@ public class MinMaxValue
         {
             return false;
         }
-        final MinMaxValue other = (MinMaxValue) obj;
+        final IntMinMaxValue other = (IntMinMaxValue) obj;
         if (accumulatedValue != other.accumulatedValue)
         {
             return false;

@@ -8,7 +8,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 /**
- * Tests the {@link MinMaxValueSet} class.
+ * Tests the {@link IntMinMaxValueSet} class.
  */
 public class MinMaxValueSetTest
 {
@@ -23,7 +23,7 @@ public class MinMaxValueSetTest
     @Test
     public void testBasics()
     {
-        final MinMaxValueSet minMaxValueSet = new MinMaxValueSet();
+        final IntMinMaxValueSet minMaxValueSet = new IntMinMaxValueSet();
 
         minMaxValueSet.addOrUpdateValue(10000, 1);
         minMaxValueSet.addOrUpdateValue(11000, 1);
@@ -38,7 +38,7 @@ public class MinMaxValueSetTest
     @Test
     public void testRandomWithDefaultSize()
     {
-        testRandom(MinMaxValueSet.DEFAULT_SIZE);
+        testRandom(IntMinMaxValueSet.DEFAULT_SIZE);
     }
 
     @Test
@@ -50,7 +50,7 @@ public class MinMaxValueSetTest
     @Test
     public void testShrinking()
     {
-        final MinMaxValueSet minMaxValueSet = new MinMaxValueSet();
+        final IntMinMaxValueSet minMaxValueSet = new IntMinMaxValueSet();
         final int[] values = new int[100000];
 
         for (int i = 0; i < values.length; i++)
@@ -68,7 +68,7 @@ public class MinMaxValueSetTest
     @Test
     public void testShiftingAndShrinking()
     {
-        final MinMaxValueSet minMaxValueSet = new MinMaxValueSet();
+        final IntMinMaxValueSet minMaxValueSet = new IntMinMaxValueSet();
         final int[] values = new int[100000];
 
         for (int i = values.length - 1; i >= 0; i--)
@@ -83,9 +83,9 @@ public class MinMaxValueSetTest
         assertEquals(condensedValues, minMaxValueSet);
     }
 
-    private void assertEquals(final int[] values, final MinMaxValueSet minMaxValueSet)
+    private void assertEquals(final int[] values, final IntMinMaxValueSet minMaxValueSet)
     {
-        final MinMaxValue[] minMaxValues = minMaxValueSet.getValues();
+        final IntMinMaxValue[] minMaxValues = minMaxValueSet.getValues();
 
         for (int i = 0; i < minMaxValues.length; i++)
         {
@@ -118,7 +118,7 @@ public class MinMaxValueSetTest
 
     private void testRandom(final int size)
     {
-        final MinMaxValueSet minMaxValueSet = new MinMaxValueSet(size);
+        final IntMinMaxValueSet minMaxValueSet = new IntMinMaxValueSet(size);
         final int[] values = new int[100000];
         final Random rng = new Random();
 
@@ -149,7 +149,7 @@ public class MinMaxValueSetTest
     @Test
     public void testConstructor()
     {
-        final MinMaxValueSet set = new MinMaxValueSet(128);
+        final IntMinMaxValueSet set = new IntMinMaxValueSet(128);
         Assert.assertEquals(1, set.getScale());
         Assert.assertEquals(128, set.getSize());
     }
@@ -159,7 +159,7 @@ public class MinMaxValueSetTest
     {
         final long from = 10000000L;
         final int size = 128;
-        final MinMaxValueSet set = new MinMaxValueSet(size);
+        final IntMinMaxValueSet set = new IntMinMaxValueSet(size);
 
         for (int i = 0; i < size; i++)
         {
@@ -171,13 +171,13 @@ public class MinMaxValueSetTest
         Assert.assertEquals(from + (size - 1) * 1000L, set.getMaximumTime());
         Assert.assertEquals(128, set.getValueCount());
 
-        final MinMaxValue[] actual = set.getValues();
+        final IntMinMaxValue[] actual = set.getValues();
         Assert.assertEquals(size, actual.length);
 
-        final MinMaxValue[] expected = new MinMaxValue[size];
+        final IntMinMaxValue[] expected = new IntMinMaxValue[size];
         for (int i = 0; i < size; i++)
         {
-            expected[i] = new MinMaxValue(10);
+            expected[i] = new IntMinMaxValue(10);
         }
         Assert.assertArrayEquals(expected, actual);
     }
@@ -192,7 +192,7 @@ public class MinMaxValueSetTest
         final int scale = 2;
         final long from = 10000000L;
         final int size = 128;
-        final MinMaxValueSet set = new MinMaxValueSet(size / scale);
+        final IntMinMaxValueSet set = new IntMinMaxValueSet(size / scale);
 
         for (int i = 0; i < size; i++)
         {
@@ -204,14 +204,14 @@ public class MinMaxValueSetTest
         Assert.assertEquals(from + (size - 1) * 1000L, set.getMaximumTime());
         Assert.assertEquals(128, set.getValueCount());
 
-        final MinMaxValue[] actual = set.getValues();
+        final IntMinMaxValue[] actual = set.getValues();
         Assert.assertEquals(size / scale, actual.length);
 
-        final MinMaxValue[] expected = new MinMaxValue[size / scale];
+        final IntMinMaxValue[] expected = new IntMinMaxValue[size / scale];
         for (int i = 0; i < size / scale; i++)
         {
-            expected[i] = new MinMaxValue(10);
-            expected[i].merge(new MinMaxValue(10));
+            expected[i] = new IntMinMaxValue(10);
+            expected[i].merge(new IntMinMaxValue(10));
         }
         Assert.assertArrayEquals(expected, actual);
     }
@@ -221,7 +221,7 @@ public class MinMaxValueSetTest
     {
         final long from = 10000000L;
         final int size = 128;
-        final MinMaxValueSet set = new MinMaxValueSet(size);
+        final IntMinMaxValueSet set = new IntMinMaxValueSet(size);
 
         for (int i = 0; i < size; i++)
         {
@@ -234,14 +234,14 @@ public class MinMaxValueSetTest
         Assert.assertEquals(from + (size - 1) * 1000L + 10, set.getMaximumTime());
         Assert.assertEquals(256, set.getValueCount());
 
-        final MinMaxValue[] actual = set.getValues();
+        final IntMinMaxValue[] actual = set.getValues();
         Assert.assertEquals(size, actual.length);
 
-        final MinMaxValue[] expected = new MinMaxValue[size];
+        final IntMinMaxValue[] expected = new IntMinMaxValue[size];
         for (int i = 0; i < size; i++)
         {
-            expected[i] = new MinMaxValue(10);
-            expected[i].merge(new MinMaxValue(12));
+            expected[i] = new IntMinMaxValue(10);
+            expected[i].merge(new IntMinMaxValue(12));
         }
         Assert.assertArrayEquals(expected, actual);
     }
@@ -255,7 +255,7 @@ public class MinMaxValueSetTest
     {
         final long from = 10000000L;
         final int size = 128;
-        final MinMaxValueSet set = new MinMaxValueSet(size);
+        final IntMinMaxValueSet set = new IntMinMaxValueSet(size);
 
         for (int i = 0; i < size; i++)
         {
@@ -271,19 +271,19 @@ public class MinMaxValueSetTest
         Assert.assertEquals(from + (2 * size - 1) * 1000L + 10, set.getMaximumTime());
         Assert.assertEquals(256, set.getValueCount());
 
-        final MinMaxValue[] actual = set.getValues();
+        final IntMinMaxValue[] actual = set.getValues();
         Assert.assertEquals(size, actual.length);
 
-        final MinMaxValue[] expected = new MinMaxValue[size];
+        final IntMinMaxValue[] expected = new IntMinMaxValue[size];
         for (int i = 0; i < size / 2; i++)
         {
-            expected[i] = new MinMaxValue(10);
-            expected[i].merge(new MinMaxValue(10));
+            expected[i] = new IntMinMaxValue(10);
+            expected[i].merge(new IntMinMaxValue(10));
         }
         for (int i = size / 2; i < size; i++)
         {
-            expected[i] = new MinMaxValue(30);
-            expected[i].merge(new MinMaxValue(30));
+            expected[i] = new IntMinMaxValue(30);
+            expected[i].merge(new IntMinMaxValue(30));
         }
         Assert.assertArrayEquals(expected, actual);
     }

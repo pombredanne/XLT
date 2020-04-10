@@ -3,14 +3,14 @@ package com.xceptance.xlt.report.util;
 import java.util.Arrays;
 
 /**
- * A {@link MinMaxValueSet} maintains different statistics, like minimum, maximum, and count, for values generated at a
+ * A {@link IntMinMaxValueSet} maintains different statistics, like minimum, maximum, and count, for values generated at a
  * certain time.
  * <p>
- * A {@link MinMaxValueSet} is fixed-sized, but self-managing. If the distance between the smallest and greatest
+ * A {@link IntMinMaxValueSet} is fixed-sized, but self-managing. If the distance between the smallest and greatest
  * time-stamp is greater than the value set size, two consecutive values are merged into one. This means the time period
  * for which values can be added to this set can be arbitrary long.
  */
-public class MinMaxValueSet
+public class IntMinMaxValueSet
 {
     /**
      * The default initial value set size.
@@ -59,27 +59,27 @@ public class MinMaxValueSet
     /**
      * The min/max values maintained by this value set.
      */
-    private final MinMaxValue[] values;
+    private final IntMinMaxValue[] values;
 
     /**
-     * Creates a {@link MinMaxValueSet} instance with a size of {@link #DEFAULT_SIZE}.
+     * Creates a {@link IntMinMaxValueSet} instance with a size of {@link #DEFAULT_SIZE}.
      */
-    public MinMaxValueSet()
+    public IntMinMaxValueSet()
     {
         this(DEFAULT_SIZE);
     }
 
     /**
-     * Creates a {@link MinMaxValueSet} instance with the specified size.
+     * Creates a {@link IntMinMaxValueSet} instance with the specified size.
      * 
      * @param size
      *            the size
      */
-    public MinMaxValueSet(final int size)
+    public IntMinMaxValueSet(final int size)
     {
         // double the size to have at least size min/max values even after shrinking
         this.size = size << 1;
-        values = new MinMaxValue[this.size];
+        values = new IntMinMaxValue[this.size];
     }
 
     /**
@@ -100,7 +100,7 @@ public class MinMaxValueSet
         {
             // yes, that's easy
             firstSecond = lastSecond = second;
-            values[0] = new MinMaxValue(value);
+            values[0] = new IntMinMaxValue(value);
 
             // maintain statistics
             minimumTime = maximumTime = time;
@@ -165,14 +165,14 @@ public class MinMaxValueSet
 
         // calculate final index and update value
         final int index = (second - firstSecond) >> scale2;
-        final MinMaxValue item = values[index];
+        final IntMinMaxValue item = values[index];
         if (item != null)
         {
             item.updateValue(value);
         }
         else
         {
-            values[index] = new MinMaxValue(value);
+            values[index] = new IntMinMaxValue(value);
         }
 
         // maintain statistics
@@ -259,18 +259,18 @@ public class MinMaxValueSet
      * 
      * @return the min/max values
      */
-    public MinMaxValue[] getValues()
+    public IntMinMaxValue[] getValues()
     {
-        MinMaxValue[] copy;
+        IntMinMaxValue[] copy;
 
         if (valueCount == 0)
         {
-            copy = new MinMaxValue[0];
+            copy = new IntMinMaxValue[0];
         }
         else
         {
             final int length = (lastSecond - firstSecond) / scale + 1;
-            copy = new MinMaxValue[length];
+            copy = new IntMinMaxValue[length];
 
             System.arraycopy(values, 0, copy, 0, length);
         }
@@ -302,9 +302,9 @@ public class MinMaxValueSet
         int j = offset;
         for (i = offset; i < size - 1; i = i + 2)
         {
-            final MinMaxValue v1 = values[i];
-            final MinMaxValue v2 = values[i + 1];
-            MinMaxValue rv = null;
+            final IntMinMaxValue v1 = values[i];
+            final IntMinMaxValue v2 = values[i + 1];
+            IntMinMaxValue rv = null;
 
             if (v1 != null)
             {

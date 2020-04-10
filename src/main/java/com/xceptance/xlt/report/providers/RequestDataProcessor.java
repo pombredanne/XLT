@@ -29,7 +29,7 @@ import com.xceptance.xlt.api.report.AbstractReportProvider;
 import com.xceptance.xlt.report.ReportGeneratorConfiguration;
 import com.xceptance.xlt.report.util.HistogramValueSet;
 import com.xceptance.xlt.report.util.JFreeChartUtils;
-import com.xceptance.xlt.report.util.MinMaxValueSet;
+import com.xceptance.xlt.report.util.IntMinMaxValueSet;
 import com.xceptance.xlt.report.util.ReportUtils;
 import com.xceptance.xlt.report.util.SegmentationValueSet;
 import com.xceptance.xlt.report.util.SummaryStatistics;
@@ -57,7 +57,7 @@ public class RequestDataProcessor extends BasicTimerDataProcessor
     /**
      * The value set holding the bytes received.
      */
-    private final MinMaxValueSet responseSizeValueSet;
+    private final IntMinMaxValueSet responseSizeValueSet;
 
     /**
      * A set of hash codes generated from URL strings. Used to determine the number of distinct URLs used. Since storing
@@ -189,7 +189,7 @@ public class RequestDataProcessor extends BasicTimerDataProcessor
 
         // setup response size value set
         final int minMaxValueSetSize = getChartWidth();
-        responseSizeValueSet = new MinMaxValueSet(minMaxValueSetSize);
+        responseSizeValueSet = new IntMinMaxValueSet(minMaxValueSetSize);
 
         // set capping parameters
         setChartCappingInfo(config.getRequestChartCappingInfo());
