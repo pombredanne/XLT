@@ -103,19 +103,19 @@ class StatisticsProcessor
 
             tasks.add(statisticsMaintenanceExecutor.submit(reportProvider, () ->
             {
-                final int size = data.size();
-                for (int d = 0; d < size; d++)
+                try
                 {
-                    final Data record = data.get(d);
-
-                    try
+                    final int size = data.size();
+                    for (int d = 0; d < size; d++)
                     {
+                        final Data record = data.get(d);
+
                         reportProvider.processDataRecord(record);
                     }
-                    catch (final Throwable t)
-                    {
-                        LOG.error("Failed to process data record", t);
-                    }
+                }
+                catch (final Throwable t)
+                {
+                    LOG.error("Failed to process data record, discarding full chunk", t);
                 }
             }));
         }
