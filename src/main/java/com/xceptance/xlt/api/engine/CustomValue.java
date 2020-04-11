@@ -2,6 +2,8 @@ package com.xceptance.xlt.api.engine;
 
 import java.util.List;
 
+import com.xceptance.common.lang.ParseNumbers;
+
 /**
  * The {@link CustomValue} can store a single 'double' value.
  * 
@@ -88,6 +90,6 @@ public class CustomValue extends AbstractData
     protected void parseValues(final List<String> values)
     {
         super.parseValues(values);
-        value = Double.parseDouble(values.get(3));
+        value = ParseNumbers.parseDouble(values.get(3));
     }
 }

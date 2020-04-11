@@ -11,16 +11,7 @@ import org.junit.Test;
 public class ParseNumbersTest
 {
     /**
-     * Verify constructior
-     */
-    @Test
-    public void testConstructor()
-    {
-        Assert.assertTrue(ReflectionUtils.classHasOnlyPrivateConstructors(ParseNumbers.class));
-    }
-
-    /**
-     * Test method for {@link com.xceptance.common.lang.ParseNumbers#parseLong(java.lang.String)}.
+     * Test method for {@link com.xceptance.common.parsenumbers.FastParseNumbers#fastParseLong(java.lang.String)}.
      */
     @Test
     public final void testParseLong()
@@ -40,7 +31,7 @@ public class ParseNumbersTest
     }
 
     /**
-     * Test method for {@link com.xceptance.common.lang.ParseNumbers#parseLong(java.lang.String)}.
+     * Test method for {@link com.xceptance.common.parsenumbers.FastParseNumbers#fastParseLong(java.lang.String)}.
      */
     @Test
     public final void testParseLongFallback()
@@ -60,7 +51,7 @@ public class ParseNumbersTest
     }
 
     /**
-     * Test method for {@link com.xceptance.common.lang.ParseNumbers#parseInt(java.lang.String)}.
+     * Test method for {@link com.xceptance.common.parsenumbers.FastParseNumbers#fastParseInt(java.lang.String)}.
      */
     @Test
     public final void testParseInt()
@@ -80,7 +71,7 @@ public class ParseNumbersTest
     }
 
     /**
-     * Test method for {@link com.xceptance.common.lang.ParseNumbers#parseInt(java.lang.String)}.
+     * Test method for {@link com.xceptance.common.parsenumbers.FastParseNumbers#fastParseInt(java.lang.String)}.
      */
     @Test
     public final void testParseIntFallback()
@@ -100,7 +91,7 @@ public class ParseNumbersTest
     }
 
     /**
-     * Test method for {@link com.xceptance.common.lang.ParseNumbers#parseInt(java.lang.String)}.
+     * Test method for {@link com.xceptance.common.parsenumbers.FastParseNumbers#fastParseInt(java.lang.String)}.
      */
     @Test(expected = NumberFormatException.class)
     public final void testNumberFormatExceptionInt_Empty()
@@ -110,7 +101,7 @@ public class ParseNumbersTest
     }
 
     /**
-     * Test method for {@link com.xceptance.common.lang.ParseNumbers#parseInt(java.lang.String)}.
+     * Test method for {@link com.xceptance.common.parsenumbers.FastParseNumbers#fastParseInt(java.lang.String)}.
      */
     @Test(expected = NumberFormatException.class)
     public final void testNumberFormatExceptionInt_Space()
@@ -120,7 +111,7 @@ public class ParseNumbersTest
     }
 
     /**
-     * Test method for {@link com.xceptance.common.lang.ParseNumbers#parseInt(java.lang.String)}.
+     * Test method for {@link com.xceptance.common.parsenumbers.FastParseNumbers#fastParseInt(java.lang.String)}.
      */
     @Test(expected = NumberFormatException.class)
     public final void testNumberFormatExceptionInt_WrongCharacter()
@@ -130,7 +121,7 @@ public class ParseNumbersTest
     }
 
     /**
-     * Test method for {@link com.xceptance.common.lang.ParseNumbers#parseInt(java.lang.String)}.
+     * Test method for {@link com.xceptance.common.parsenumbers.FastParseNumbers#fastParseInt(java.lang.String)}.
      */
     @Test(expected = NumberFormatException.class)
     public final void testNumberFormatExceptionInt_Null()
@@ -140,7 +131,7 @@ public class ParseNumbersTest
     }
 
     /**
-     * Test method for {@link com.xceptance.common.lang.ParseNumbers#parseInt(java.lang.String)}.
+     * Test method for {@link com.xceptance.common.parsenumbers.FastParseNumbers#fastParseInt(java.lang.String)}.
      */
     @Test(expected = NumberFormatException.class)
     public final void testNumberFormatExceptionLong_Empty()
@@ -150,7 +141,7 @@ public class ParseNumbersTest
     }
 
     /**
-     * Test method for {@link com.xceptance.common.lang.ParseNumbers#parseInt(java.lang.String)}.
+     * Test method for {@link com.xceptance.common.parsenumbers.FastParseNumbers#fastParseInt(java.lang.String)}.
      */
     @Test(expected = NumberFormatException.class)
     public final void testNumberFormatExceptionLong_Space()
@@ -160,7 +151,7 @@ public class ParseNumbersTest
     }
 
     /**
-     * Test method for {@link com.xceptance.common.lang.ParseNumbers#parseInt(java.lang.String)}.
+     * Test method for {@link com.xceptance.common.parsenumbers.FastParseNumbers#fastParseInt(java.lang.String)}.
      */
     @Test(expected = NumberFormatException.class)
     public final void testNumberFormatExceptionLong_WrongCharacter()
@@ -170,12 +161,39 @@ public class ParseNumbersTest
     }
 
     /**
-     * Test method for {@link com.xceptance.common.lang.ParseNumbers#parseInt(java.lang.String)}.
+     * Test method for {@link com.xceptance.common.parsenumbers.FastParseNumbers#fastParseInt(java.lang.String)}.
      */
     @Test(expected = NumberFormatException.class)
     public final void testNumberFormatExceptionLong_Null()
     {
         final String s = null;
         ParseNumbers.parseLong(s);
+    }
+    
+    // ================================================================
+    // Double
+    
+    @Test
+    public void doubleHappyPath()
+    {
+        Assert.assertEquals("1.0",String.valueOf(ParseNumbers.parseDouble("1")));
+        Assert.assertEquals("1.0",String.valueOf(ParseNumbers.parseDouble("1.0")));
+        Assert.assertEquals("1.0",String.valueOf(ParseNumbers.parseDouble("1.000")));
+        Assert.assertEquals("10.100000000000001",String.valueOf(ParseNumbers.parseDouble("10.1")));
+        Assert.assertEquals("2.2",String.valueOf(ParseNumbers.parseDouble("2.2")));
+        Assert.assertEquals("2.222",String.valueOf(ParseNumbers.parseDouble("2.222")));
+        Assert.assertEquals("112.255",String.valueOf(ParseNumbers.parseDouble("112.255")));
+        Assert.assertEquals("44112.222",String.valueOf(ParseNumbers.parseDouble("44112.222")));
+        Assert.assertEquals("0.0",String.valueOf(ParseNumbers.parseDouble("0")));
+        Assert.assertEquals("0.0",String.valueOf(ParseNumbers.parseDouble("0.0")));
+        Assert.assertEquals("-1.0",String.valueOf(ParseNumbers.parseDouble("-1")));
+        Assert.assertEquals("0.2",String.valueOf(ParseNumbers.parseDouble("0.2")));
+        Assert.assertEquals("100.10000000000001",String.valueOf(ParseNumbers.parseDouble("100.1")));
+        Assert.assertEquals("1000.1",String.valueOf(ParseNumbers.parseDouble("1000.1")));
+        Assert.assertEquals("10000.1",String.valueOf(ParseNumbers.parseDouble("10000.1")));
+        Assert.assertEquals("100000.1",String.valueOf(ParseNumbers.parseDouble("100000.1")));
+
+        Assert.assertEquals("0.25",String.valueOf(ParseNumbers.parseDouble("0.25")));
+        Assert.assertEquals("10.25",String.valueOf(ParseNumbers.parseDouble("10.25")));
     }
 }

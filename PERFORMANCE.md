@@ -117,11 +117,14 @@ All providers, no merge rules, 0-3, 24,909,446 (44,495 ms) - (559,826 lines/s)
 ### After url hash move
 All providers, no merge rules, 0-3, 24,909,446 (43,134 ms) - (577,490 lines/s)
 
+Dropped fast parse int idea without checks and using char[] instead of string for less conversion, 
+no effect or even slower on T450s and 4+4
 
+### Double as fast version
+24,909,446 (43,661 ms) - (570,519 lines/s)
 
 
 #Idea
-* Move expensive stuff into data preprocessing out of providers
 * Give a provider only what it needs (only its typecodes)
 * Providers announce what Data they want and get that only
 * Give each line to all providers in a thread

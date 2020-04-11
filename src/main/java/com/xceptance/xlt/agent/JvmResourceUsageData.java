@@ -545,46 +545,62 @@ public class JvmResourceUsageData extends AbstractData
         super.parseValues(values);
 
         // read and check the values
-        cpuUsage = Double.parseDouble(values.get(3));
-        committedMemorySize = Long.parseLong(values.get(4));
-        memoryUsage = Double.parseDouble(values.get(5));
-        usedHeapSize = Long.parseLong(values.get(6));
-        totalHeapSize = Long.parseLong(values.get(7));
-        heapUsage = Double.parseDouble(values.get(8));
+        cpuUsage = ParseNumbers.parseDouble(values.get(3));
+        committedMemorySize = ParseNumbers.parseLong(values.get(4));
+        memoryUsage = ParseNumbers.parseDouble(values.get(5));
+        usedHeapSize = ParseNumbers.parseLong(values.get(6));
+        totalHeapSize = ParseNumbers.parseLong(values.get(7));
+        heapUsage = ParseNumbers.parseDouble(values.get(8));
 
-        // allow older reports to be regenerated
-        if (values.size() >= 12)
-        {
-            runnableThreadCount = Integer.parseInt(values.get(9));
-            blockedThreadCount = Integer.parseInt(values.get(10));
-            waitingThreadCount = Integer.parseInt(values.get(11));
-        }
-
-        if (values.size() >= 18)
-        {
-            minorGcCount = ParseNumbers.parseLong(values.get(12));
-            minorGcTime = ParseNumbers.parseLong(values.get(13));
-            minorGcCpuUsage = Double.parseDouble(values.get(14));
-            fullGcCount = ParseNumbers.parseLong(values.get(15));
-            fullGcTime = ParseNumbers.parseLong(values.get(16));
-            fullGcCpuUsage = Double.parseDouble(values.get(17));
-        }
-
-        if (values.size() >= 20)
-        {
-            minorGcTimeDiff = ParseNumbers.parseInt(values.get(18));
-            fullGcTimeDiff = ParseNumbers.parseInt(values.get(19));
-        }
-
-        if (values.size() >= 22)
-        {
-            minorGcCountDiff = ParseNumbers.parseInt(values.get(20));
-            fullGcCountDiff = ParseNumbers.parseInt(values.get(21));
-        }
-
+        // current first
         if (values.size() >= 23)
         {
-            totalCpuUsage = Double.parseDouble(values.get(22));
+            runnableThreadCount = ParseNumbers.parseInt(values.get(9));
+            blockedThreadCount = ParseNumbers.parseInt(values.get(10));
+            waitingThreadCount = ParseNumbers.parseInt(values.get(11));
+            minorGcCount = ParseNumbers.parseLong(values.get(12));
+            minorGcTime = ParseNumbers.parseLong(values.get(13));
+            minorGcCpuUsage = ParseNumbers.parseDouble(values.get(14));
+            fullGcCount = ParseNumbers.parseLong(values.get(15));
+            fullGcTime = ParseNumbers.parseLong(values.get(16));
+            fullGcCpuUsage = ParseNumbers.parseDouble(values.get(17));
+            minorGcTimeDiff = ParseNumbers.parseInt(values.get(18));
+            fullGcTimeDiff = ParseNumbers.parseInt(values.get(19));
+            minorGcCountDiff = ParseNumbers.parseInt(values.get(20));
+            fullGcCountDiff = ParseNumbers.parseInt(values.get(21));
+            totalCpuUsage = ParseNumbers.parseDouble(values.get(22));
+        }
+        else
+        {
+            // allow older reports to be regenerated
+            if (values.size() >= 12)
+            {
+                runnableThreadCount = ParseNumbers.parseInt(values.get(9));
+                blockedThreadCount = ParseNumbers.parseInt(values.get(10));
+                waitingThreadCount = ParseNumbers.parseInt(values.get(11));
+            }
+
+            if (values.size() >= 18)
+            {
+                minorGcCount = ParseNumbers.parseLong(values.get(12));
+                minorGcTime = ParseNumbers.parseLong(values.get(13));
+                minorGcCpuUsage = ParseNumbers.parseDouble(values.get(14));
+                fullGcCount = ParseNumbers.parseLong(values.get(15));
+                fullGcTime = ParseNumbers.parseLong(values.get(16));
+                fullGcCpuUsage = ParseNumbers.parseDouble(values.get(17));
+            }
+
+            if (values.size() >= 20)
+            {
+                minorGcTimeDiff = ParseNumbers.parseInt(values.get(18));
+                fullGcTimeDiff = ParseNumbers.parseInt(values.get(19));
+            }
+
+            if (values.size() >= 22)
+            {
+                minorGcCountDiff = ParseNumbers.parseInt(values.get(20));
+                fullGcCountDiff = ParseNumbers.parseInt(values.get(21));
+            }
         }
     }
 }
