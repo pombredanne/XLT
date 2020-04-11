@@ -1,6 +1,7 @@
 package com.xceptance.common.util;
 
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -43,7 +44,7 @@ public final class CsvUtilsDecode
      *            the CSV-encoded data record
      * @return the plain fields
      */
-    public static List<String> parse(final String s)
+    public static List<char[]> parse(final String s)
     {
         return parse(s.toCharArray(), COMMA);
     }
@@ -54,8 +55,10 @@ public final class CsvUtilsDecode
     private static final int SEPARATOR_EXPECTED = 4;
     private static final int LAST_WAS_SEPARATOR = 8;
     
+    private static final char[] EMPTY_STRING_CHARARRAY = "".toCharArray();
+    
     /**
-     * Encodes the given fields to a CSV-encoded data record using the given field separator.
+     * Decodes the given fields to a CSV-encoded data record using the given field separator.
      * 
      * @param s
      *            the plain fields
@@ -64,14 +67,16 @@ public final class CsvUtilsDecode
      * @return the CSV-encoded data record
      * @throws ParseException 
      */
-    public static List<String> parse(final char[] src, final char fieldSeparator)
+    public static List<char[]> parse(final char[] src, final char fieldSeparator)
     {
-        final SimpleArrayList<String> result = new SimpleArrayList<>(32);
+        final SimpleArrayList<char[]> result = new SimpleArrayList<>(32);
         
         int state = NONE;
         int pos = 0;
         
-        for (int i = 0; i < src.length; i++)
+        final int length = src.length;
+        
+        for (int i = 0; i < length; i++)
         {
             final char c = src[i];
             
@@ -129,7 +134,7 @@ public final class CsvUtilsDecode
                 {
                     // ok, no quotes and seperator, so get us the data
                     // less heavy lifting if we don't have anything
-                    result.add(pos == 0 ? "" : String.valueOf(src, 0, pos));
+                    result.add(pos == 0 ? EMPTY_STRING_CHARARRAY : Arrays.copyOfRange(src, 0, pos));
                     
                     // in case we have nothing later, we gotta indicate us an empty string
                     state = LAST_WAS_SEPARATOR;
@@ -152,11 +157,11 @@ public final class CsvUtilsDecode
         
         if (pos > 0)
         {
-            result.add(String.valueOf(src, 0, pos));
+            result.add(Arrays.copyOfRange(src, 0, pos));
         }
         else if ((state & LAST_WAS_SEPARATOR) == LAST_WAS_SEPARATOR)
         {
-            result.add("");
+            result.add(EMPTY_STRING_CHARARRAY);
         }
         
         return result;

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.xceptance.common.lang.FastParseNumbers;
 import com.xceptance.common.lang.ParseNumbers;
 import com.xceptance.common.lang.StringHasher;
 import com.xceptance.xlt.engine.util.UrlUtils;
@@ -32,7 +33,7 @@ public class RequestData extends TimerData
     /**
      * The type code.
      */
-    private static final String TYPE_CODE = "R";
+    private static final char TYPE_CODE = 'R';
 
     /**
      * The character used to separate multiple IP addresses.
@@ -669,38 +670,42 @@ public class RequestData extends TimerData
      * {@inheritDoc}
      */
     @Override
-    protected void parseValues(final List<String> values)
+    protected void parseValues(final List<char[]> values)
     {
         super.parseValues(values);
 
-        setBytesSent(ParseNumbers.parseInt(values.get(5)));
-        setBytesReceived(ParseNumbers.parseInt(values.get(6)));
-        setResponseCode(ParseNumbers.parseInt(values.get(7)));
+        setBytesSent(FastParseNumbers.fastParseInt(values.get(5)));
+        setBytesReceived(FastParseNumbers.fastParseInt(values.get(6)));
+        setResponseCode(FastParseNumbers.fastParseInt(values.get(7)));
 
         if (values.size() > 22)
         {
-            setUrl(values.get(8));
-            contentType = values.get(9);
+            setUrl(String.valueOf(values.get(8)));
+            contentType = String.valueOf(values.get(9));
 
-            setConnectTime(ParseNumbers.parseInt(values.get(10)));
-            setSendTime(ParseNumbers.parseInt(values.get(11)));
-            setServerBusyTime(ParseNumbers.parseInt(values.get(12)));
-            setReceiveTime(ParseNumbers.parseInt(values.get(13)));
-            setTimeToFirstBytes(ParseNumbers.parseInt(values.get(14)));
-            setTimeToLastBytes(ParseNumbers.parseInt(values.get(15)));
-            setRequestId(values.get(16));
-            setHttpMethod(values.get(17));
-            setFormDataEncoding(values.get(18));
-            setFormData(values.get(19));
-            setDnsTime(ParseNumbers.parseInt(values.get(20)));
-            ipAddresses = values.get(21);
-            setResponseId(values.get(22));
+            setConnectTime(FastParseNumbers.fastParseInt(values.get(10)));
+            setSendTime(FastParseNumbers.fastParseInt(values.get(11)));
+            setServerBusyTime(FastParseNumbers.fastParseInt(values.get(12)));
+            setReceiveTime(FastParseNumbers.fastParseInt(values.get(13)));
+            setTimeToFirstBytes(FastParseNumbers.fastParseInt(values.get(14)));
+            setTimeToLastBytes(FastParseNumbers.fastParseInt(values.get(15)));
+            setRequestId(String.valueOf(values.get(16)));
+            setHttpMethod(String.valueOf(values.get(17)));
+            setFormDataEncoding(String.valueOf(values.get(18)));
+            setFormData(String.valueOf(values.get(19)));
+            setDnsTime(FastParseNumbers.fastParseInt(values.get(20)));
+            ipAddresses = String.valueOf(values.get(21));
+            setResponseId(String.valueOf(values.get(22)));
         }
         else
         {
             // do legacy, translate to array because it does rarely happen
-            parseLegacyValues(values.toArray(new String[0]));
-            System.out.println("ff");
+            final String[] data = new String[values.size()];
+            for (int i = 0; i < values.size(); i++)
+            {
+                data[i] = String.valueOf(values.get(i));
+            }
+            parseLegacyValues(data);
         }
     }
 

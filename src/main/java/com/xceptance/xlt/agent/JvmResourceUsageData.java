@@ -2,10 +2,9 @@ package com.xceptance.xlt.agent;
 
 import java.util.List;
 
+import com.xceptance.common.lang.FastParseNumbers;
 import com.xceptance.common.lang.ParseNumbers;
 import com.xceptance.xlt.api.engine.AbstractData;
-import com.xceptance.xlt.api.engine.Data;
-import com.xceptance.xlt.api.engine.GlobalClock;
 
 /**
  * The {@link JvmResourceUsageData} class holds resource usage statistics for the current agent JVM. Currently, this
@@ -22,6 +21,8 @@ import com.xceptance.xlt.api.engine.GlobalClock;
  */
 public class JvmResourceUsageData extends AbstractData
 {
+    private final static char TYPE_CODE = 'J';
+    
     private int blockedThreadCount;
 
     private long committedMemorySize;
@@ -67,7 +68,7 @@ public class JvmResourceUsageData extends AbstractData
      */
     public JvmResourceUsageData()
     {
-        super("J");
+        super(TYPE_CODE);
     }
 
     /**
@@ -78,7 +79,7 @@ public class JvmResourceUsageData extends AbstractData
      */
     public JvmResourceUsageData(final String name)
     {
-        super(name, "J");
+        super(name, TYPE_CODE);
     }
 
     /**
@@ -540,51 +541,72 @@ public class JvmResourceUsageData extends AbstractData
      * {@inheritDoc}
      */
     @Override
-    protected void parseValues(final List<String> values)
+    protected void parseValues(final List<char[]> values)
     {
         super.parseValues(values);
 
         // read and check the values
-        cpuUsage = Double.parseDouble(values.get(3));
-        committedMemorySize = Long.parseLong(values.get(4));
-        memoryUsage = Double.parseDouble(values.get(5));
-        usedHeapSize = Long.parseLong(values.get(6));
-        totalHeapSize = Long.parseLong(values.get(7));
-        heapUsage = Double.parseDouble(values.get(8));
+        cpuUsage = Double.parseDouble(String.valueOf(values.get(3)));
+        committedMemorySize = FastParseNumbers.fastParseLong(values.get(4));
+        memoryUsage = Double.parseDouble(String.valueOf(values.get(5)));
+        usedHeapSize = FastParseNumbers.fastParseLong(values.get(6));
+        totalHeapSize = FastParseNumbers.fastParseLong(values.get(7));
+        heapUsage = Double.parseDouble(String.valueOf(values.get(8)));
 
-        // allow older reports to be regenerated
-        if (values.size() >= 12)
-        {
-            runnableThreadCount = Integer.parseInt(values.get(9));
-            blockedThreadCount = Integer.parseInt(values.get(10));
-            waitingThreadCount = Integer.parseInt(values.get(11));
-        }
-
-        if (values.size() >= 18)
-        {
-            minorGcCount = ParseNumbers.parseLong(values.get(12));
-            minorGcTime = ParseNumbers.parseLong(values.get(13));
-            minorGcCpuUsage = Double.parseDouble(values.get(14));
-            fullGcCount = ParseNumbers.parseLong(values.get(15));
-            fullGcTime = ParseNumbers.parseLong(values.get(16));
-            fullGcCpuUsage = Double.parseDouble(values.get(17));
-        }
-
-        if (values.size() >= 20)
-        {
-            minorGcTimeDiff = ParseNumbers.parseInt(values.get(18));
-            fullGcTimeDiff = ParseNumbers.parseInt(values.get(19));
-        }
-
-        if (values.size() >= 22)
-        {
-            minorGcCountDiff = ParseNumbers.parseInt(values.get(20));
-            fullGcCountDiff = ParseNumbers.parseInt(values.get(21));
-        }
-
+        // do the lastest first before trying the fallbacks
         if (values.size() >= 23)
         {
-            totalCpuUsage = Double.parseDouble(values.get(22));
+                runnableThreadCount = FastParseNumbers.fastParseInt(values.get(9));
+                blockedThreadCount = FastParseNumbers.fastParseInt(values.get(10));
+                waitingThreadCount = FastParseNumbers.fastParseInt(values.get(11));
+
+                minorGcCount = FastParseNumbers.fastParseLong(values.get(12));
+                minorGcTime = FastParseNumbers.fastParseLong(values.get(13));
+                minorGcCpuUsage = Double.parseDouble(String.valueOf(values.get(14)));
+                fullGcCount = FastParseNumbers.fastParseLong(values.get(15));
+                fullGcTime = FastParseNumbers.fastParseLong(values.get(16));
+                fullGcCpuUsage = Double.parseDouble(String.valueOf(values.get(17)));
+            
+
+                minorGcTimeDiff = FastParseNumbers.fastParseInt(values.get(18));
+                fullGcTimeDiff = FastParseNumbers.fastParseInt(values.get(19));
+
+                minorGcCountDiff = FastParseNumbers.fastParseInt(values.get(20));
+                fullGcCountDiff = FastParseNumbers.fastParseInt(values.get(21));
+
+                totalCpuUsage = Double.parseDouble(String.valueOf(values.get(22)));
+        }
+        else
+        {
+            // allow older reports to be regenerated
+            if (values.size() >= 12)
+            {
+                runnableThreadCount = FastParseNumbers.fastParseInt(values.get(9));
+                blockedThreadCount = FastParseNumbers.fastParseInt(values.get(10));
+                waitingThreadCount = FastParseNumbers.fastParseInt(values.get(11));
+            }
+
+            if (values.size() >= 18)
+            {
+                minorGcCount = FastParseNumbers.fastParseLong(values.get(12));
+                minorGcTime = FastParseNumbers.fastParseLong(values.get(13));
+                minorGcCpuUsage = Double.parseDouble(String.valueOf(values.get(14)));
+                fullGcCount = FastParseNumbers.fastParseLong(values.get(15));
+                fullGcTime = FastParseNumbers.fastParseLong(values.get(16));
+                fullGcCpuUsage = Double.parseDouble(String.valueOf(values.get(17)));
+            }
+
+            if (values.size() >= 20)
+            {
+                minorGcTimeDiff = FastParseNumbers.fastParseInt(values.get(18));
+                fullGcTimeDiff = FastParseNumbers.fastParseInt(values.get(19));
+            }
+
+            if (values.size() >= 22)
+            {
+                minorGcCountDiff = FastParseNumbers.fastParseInt(values.get(20));
+                fullGcCountDiff = FastParseNumbers.fastParseInt(values.get(21));
+            }
         }
     }
 }

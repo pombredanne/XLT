@@ -34,7 +34,7 @@ public class TransactionData extends TimerData
     /**
      * The type code ("T").
      */
-    private static final String TYPE_CODE = "T";
+    private static final char TYPE_CODE = 'T';
 
     /**
      * The last part of the path to the directory where dumped pages can be found. Kept separate to make as much use of
@@ -267,12 +267,12 @@ public class TransactionData extends TimerData
      * {@inheritDoc}
      */
     @Override
-    protected void parseValues(final List<String> values)
+    protected void parseValues(final List<char[]> values)
     {
         super.parseValues(values);
 
         // process the stack trace
-        stackTrace = values.get(5).trim();
+        stackTrace = String.valueOf(values.get(5)).trim();
         if (stackTrace.length() == 0)
         {
             stackTrace = null;
@@ -285,16 +285,17 @@ public class TransactionData extends TimerData
 
         // be defensive so a report can be generated also for older results
         final int length = values.size();
-        if (length > 6)
-        {
-            setFailedActionName(values.get(6));
-        }
 
         // test user number and directory name (since XLT 4.13.2)
         if (length > 7)
         {
-            setTestUserNumber(values.get(7));
-            setDirectoryName(values.get(8));
+            setFailedActionName(String.valueOf(values.get(6)));
+            setTestUserNumber(String.valueOf(values.get(7)));
+            setDirectoryName(String.valueOf(values.get(8)));
+        }
+        else if (length > 6)
+        {
+            setFailedActionName(String.valueOf(values.get(6)));
         }
         else
         {

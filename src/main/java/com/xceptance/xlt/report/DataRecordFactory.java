@@ -7,8 +7,7 @@ import com.xceptance.xlt.api.engine.Data;
 /**
  * Data classes hold processor for certain data types, such as Request, Transaction, Action, and
  * more. This is indicated in the logs by the first column of the record (a line), such as
- * A, T, R, C, and more. This can be later extended. The column is not limited to a single character
- * and can hold more, in case we run out of options sooner or later.
+ * A, T, R, C, and more. This can be later extended. The column is limited to a single character.
  */
 public class DataRecordFactory
 {
@@ -66,7 +65,7 @@ public class DataRecordFactory
     {
         // get the type code
         // get the respective data record class
-        final Class<? extends Data> c = classes[s.charAt(0)- offset];
+        final Class<? extends Data> c = classes[s.charAt(0) - offset];
 
         // create the statistics object
         final Data stats = c.newInstance();

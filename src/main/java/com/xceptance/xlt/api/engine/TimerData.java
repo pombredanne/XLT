@@ -2,7 +2,7 @@ package com.xceptance.xlt.api.engine;
 
 import java.util.List;
 
-import com.xceptance.common.lang.ParseNumbers;
+import com.xceptance.common.lang.FastParseNumbers;
 
 /**
  * The {@link TimerData} class is the super class for all timer-based data records.
@@ -27,7 +27,7 @@ public abstract class TimerData extends AbstractData
      * @param typeCode
      *            the type code
      */
-    public TimerData(final String typeCode)
+    public TimerData(final char typeCode)
     {
         super(typeCode);
     }
@@ -41,7 +41,7 @@ public abstract class TimerData extends AbstractData
      * @param typeCode
      *            the type code
      */
-    public TimerData(final String name, final String typeCode)
+    public TimerData(final String name, final char typeCode)
     {
         super(name, typeCode);
     }
@@ -126,19 +126,19 @@ public abstract class TimerData extends AbstractData
      * {@inheritDoc}
      */
     @Override
-    protected void parseValues(final List<String> values)
+    protected void parseValues(final List<char[]> values)
     {
         super.parseValues(values);
 
         // read and check the values
-        runTime = ParseNumbers.parseInt(values.get(3));
+        runTime = FastParseNumbers.fastParseInt(values.get(3));
 
         if (runTime < 0)
         {
             throw new IllegalArgumentException("Invalid value for the 'runtime' attribute.");
         }
 
-        failed = Boolean.valueOf(values.get(4));
+        failed = Boolean.valueOf(String.valueOf(values.get(4)));
     }
 
     /**

@@ -1,62 +1,70 @@
 package com.xceptance.common.util;
 
-import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 public class CSVUtilsDecodeTest
 {
-    private void test(String s, String... expected) throws ParseException
+    private void test(String s, String... expected) 
     {
-        Assert.assertArrayEquals(expected, CsvUtilsDecode.parse(s).toArray());
+        List<char[]> cExpected = new ArrayList<>();
+        for (String st : expected)
+        {
+            cExpected.add(st.toCharArray());
+        }
+
+        Assert.assertArrayEquals(cExpected.toArray(), CsvUtilsDecode.parse(s).toArray());
     }
-    
+
     @Test
-    public void col1() throws ParseException
+    public void col1() 
     {
         test("a", "a");
     }
     @Test
-    public void col1_long() throws ParseException
+    public void col1_long() 
     {
         test("foobar", "foobar");
     }
     @Test
-    public void col1Quoted() throws ParseException
+    public void col1Quoted() 
     {
         test("\"a\"", "a");
     }
     @Test
-    public void col1Quoted_long() throws ParseException
+    public void col1Quoted_long() 
     {
         test("\"foobar\"", "foobar");
     }
     @Test
-    public void col2() throws ParseException
+    public void col2() 
     {
         test("a,b", "a", "b");
         test("aa,bb", "aa", "bb");
     }
     @Test
-    public void col2Quoted() throws ParseException
+    public void col2Quoted() 
     {
         test("\"a\",\"b\"", "a", "b");
         test("\"aa\",\"bb\"", "aa", "bb");
     }
     @Test
-    public void quotedQuotes() throws ParseException
+    public void quotedQuotes() 
     {
         test("\"\"\"\"", "\"");
         test("\"a\"\"a\"", "a\"a");
     }
 
     @Test
-    public void emptyCols() throws ParseException
+    public void emptyCols() 
     {
         test("a,,,b,", "a", "", "", "b", "");
         test("a,,b", "a", "", "b");
         test("a,,,b", "a", "", "", "b");
         test(",", "", "");
     }
+
 }

@@ -3,7 +3,7 @@ package com.xceptance.xlt.api.engine;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.xceptance.common.lang.ParseNumbers;
+import com.xceptance.common.lang.FastParseNumbers;
 import com.xceptance.common.util.CsvUtils;
 import com.xceptance.common.util.CsvUtilsDecode;
 
@@ -22,7 +22,7 @@ public abstract class AbstractData implements Data
     /**
      * The type code.
      */
-    private String typeCode;
+    private char typeCode;
 
     /**
      * The name of the data record. Typically, data records for the same piece of work share a common name.
@@ -47,7 +47,7 @@ public abstract class AbstractData implements Data
      * @param typeCode
      *            the type code
      */
-    public AbstractData(final String name, final String typeCode)
+    public AbstractData(final String name, final char typeCode)
     {        
         this.name = name;
         this.typeCode = typeCode;
@@ -59,9 +59,10 @@ public abstract class AbstractData implements Data
      * @param typeCode
      *            the type code
      */
-    public AbstractData(final String typeCode)
+    public AbstractData(final char typeCode)
     {
-        this(null, typeCode);
+        this.name = null;
+        this.typeCode = typeCode;
     }
     
     /**
@@ -70,7 +71,7 @@ public abstract class AbstractData implements Data
     @Override
     public final void fromCSV(final String s)
     {
-        final List<String> fields = CsvUtilsDecode.parse(s.toCharArray(), DELIMITER);
+        final List<char[]> fields = CsvUtilsDecode.parse(s.toCharArray(), DELIMITER);
         parseValues(fields);
     }
 
@@ -114,7 +115,7 @@ public abstract class AbstractData implements Data
      * {@inheritDoc}
      */
     @Override
-    public String getTypeCode()
+    public char getTypeCode()
     {
         return typeCode;
     }
@@ -186,7 +187,7 @@ public abstract class AbstractData implements Data
     {
         final List<String> fields = new ArrayList<String>(20);
 
-        fields.add(typeCode);
+        fields.add(String.valueOf(typeCode));
         fields.add(name);
         fields.add(Long.toString(time));
 
@@ -210,7 +211,7 @@ public abstract class AbstractData implements Data
      * @param values
      *            the list of values, must have at least the length {@link #getMinNoCSVElements()}
      */
-    protected void parseValues(final List<String> values)
+    protected void parseValues(final List<char[]> values)
     {
         if (values.size() < getMinNoCSVElements())
         {
@@ -219,11 +220,11 @@ public abstract class AbstractData implements Data
         }
 
         // check the type code
-        if (values.get(0).equals(typeCode))
+        if (values.get(0)[0] == typeCode)
         {
             // read and check the values
-            name = values.get(1);
-            time = ParseNumbers.parseLong(values.get(2));
+            name = String.valueOf(values.get(1));
+            time = FastParseNumbers.fastParseLong(values.get(2));
 
             if (time <= 0)
             {
@@ -232,7 +233,7 @@ public abstract class AbstractData implements Data
         }
         else
         {
-            throw new IllegalArgumentException("Cannot recreate the object state. The read type code '" + values.get(0) +
+            throw new IllegalArgumentException("Cannot recreate the object state. The read type code '" + values.get(0)[0] +
                                                "' does not match the expected type code '" + typeCode + "'.");
         }
     }

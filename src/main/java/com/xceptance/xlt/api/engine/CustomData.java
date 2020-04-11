@@ -20,7 +20,7 @@ public class CustomData extends TimerData
     /**
      * The type code.
      */
-    private static final String TYPE_CODE = "C";
+    private static final char TYPE_CODE = 'C';
 
     /**
      * Creates a new CustomData object.

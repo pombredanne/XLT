@@ -32,7 +32,7 @@ public class EventData extends AbstractData
     /**
      * The type code ("E").
      */
-    private static final String TYPE_CODE = "E";
+    private static final char TYPE_CODE = 'E';
 
     /**
      * The message describing the details of this event.
@@ -123,13 +123,13 @@ public class EventData extends AbstractData
      * {@inheritDoc}
      */
     @Override
-    protected void parseValues(final List<String> values)
+    protected void parseValues(final List<char[]> values)
     {
         super.parseValues(values);
 
         // read and check the values
-        testCaseName = values.get(3);
-        message = values.get(4);
+        testCaseName = String.valueOf(values.get(3));
+        message = String.valueOf(values.get(4));
     }
 
     /**
