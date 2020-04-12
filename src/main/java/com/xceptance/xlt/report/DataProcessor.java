@@ -28,8 +28,8 @@ import com.xceptance.xlt.engine.util.TimerUtils;
  * +- line processing pool
  * -> StatisicsProcessor (single thread)
  *
- * @see DataRecordReader
- * @see DataRecordParser
+ * @see DataReaderThread
+ * @see DataParserThread
  * @see StatisticsProcessor
  */
 public class DataProcessor
@@ -42,17 +42,23 @@ public class DataProcessor
     /**
      * The executor dealing with the data record parser threads.
      */
-    private final ExecutorService dataRecordParserExecutor;
+    private final ExecutorService dataParserExecutor;
 
     /**
-     * The one and only data record processor.
+     * The pool of threads running postprocessing
      */
-    private final StatisticsProcessor dataRecordProcessor;
+    private final ExecutorService dataPostprocessingExecutor;
+
+    /**
+     * The area where we handle the final data gathering aka collecting
+     * of data for later reporting 
+     */
+    private final StatisticsProcessor statisticsProcessor;
 
     /**
      * The executor dealing with the data record reader threads.
      */
-    private final ExecutorService dataRecordReaderExecutor;
+    private final ExecutorService dataReaderExecutor;
 
     /**
      * The dispatcher that coordinates all the reader/parser/processor threads.
@@ -120,26 +126,31 @@ public class DataProcessor
         agentFilter = new StringMatcher(agentIncludePatternList, agentExcludePatternList, true);
 
         // the one and only data record processor
-        dataRecordProcessor = new StatisticsProcessor(reportProviders, config.statisticsThreadCount);
-
-        // create the dispatcher
-        dispatcher = new Dispatcher(config, dataRecordProcessor);
+        statisticsProcessor = new StatisticsProcessor(reportProviders, config.statisticsThreadCount);
 
         // create the reader executor
-        dataRecordReaderExecutor = Executors.newFixedThreadPool(config.readerThreadCount, new DaemonThreadFactory(i -> "DataRecordReader-" + i, Thread.MAX_PRIORITY));
+        dataReaderExecutor = Executors.newFixedThreadPool(config.readerThreadCount, new DaemonThreadFactory(i -> "DataReader-" + i, Thread.MAX_PRIORITY));
 
         // create the data record parser threads
-        dataRecordParserExecutor = Executors.newFixedThreadPool(config.parserThreadCount, new DaemonThreadFactory(i -> "DataRecordParser-" + i));
-        
+        dataParserExecutor = Executors.newFixedThreadPool(config.parserThreadCount, new DaemonThreadFactory(i -> "DataParser-" + i));
+
+        // create the data postprocessing threads
+        dataPostprocessingExecutor = Executors.newFixedThreadPool(config.postprocessingThreadCount, new DaemonThreadFactory(i -> "DataPostprocessor-" + i));
+
+        // create the dispatcher
+        dispatcher = new Dispatcher(config, statisticsProcessor);
+
         // start the threads
         for (int i = 0; i < config.parserThreadCount; i++)
         {
-            dataRecordParserExecutor.execute(new DataRecordParser(dataRecordFactory, 
-                                                                  fromTime, toTime, 
-                                                                  config.getRequestProcessingRules(), dispatcher,
-                                                                  config.getRemoveIndexesFromRequestNames()));
+            dataParserExecutor.execute(
+                                       new DataParserThread(dispatcher, dataRecordFactory, fromTime, toTime));
         }
-
+        for (int i = 0; i < config.postprocessingThreadCount; i++)
+        {
+            dataPostprocessingExecutor.execute(new DataPostprocessingThread(dispatcher, config.getRequestProcessingRules(), config.getRemoveIndexesFromRequestNames()));
+        }
+        
         LOG.info(String.format("Reading files from input directory '%s' ...\n", inputDir));
     }
 
@@ -150,7 +161,7 @@ public class DataProcessor
      */
     public final long getMaximumTime()
     {
-        return dataRecordProcessor.getMaximumTime();
+        return statisticsProcessor.getMaximumTime();
     }
 
     /**
@@ -160,7 +171,7 @@ public class DataProcessor
      */
     public final long getMinimumTime()
     {
-        return dataRecordProcessor.getMinimumTime();
+        return statisticsProcessor.getMinimumTime();
     }
 
     /**
@@ -203,8 +214,9 @@ public class DataProcessor
         finally
         {
             // stop background threads
-            dataRecordParserExecutor.shutdownNow();
-            dataRecordReaderExecutor.shutdownNow();
+            dataPostprocessingExecutor.shutdownNow();
+            dataParserExecutor.shutdownNow();
+            dataReaderExecutor.shutdownNow();
         }
     }
 
@@ -274,10 +286,10 @@ public class DataProcessor
         
         // create a new reader for each user directory and enqueue it for execution
         final String userNumber = testUserDir.getName().getBaseName();
-        final DataRecordReader reader = new DataRecordReader(testUserDir, agentName, testCaseName, userNumber, 
+        final DataReaderThread reader = new DataReaderThread(testUserDir, agentName, testCaseName, userNumber, 
                                                              totalLinesCounter,
                                                              dispatcher);
-        dataRecordReaderExecutor.execute(reader);
+        dataReaderExecutor.execute(reader);
     }
 
     /**

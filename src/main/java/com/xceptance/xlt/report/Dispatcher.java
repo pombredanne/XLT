@@ -3,6 +3,9 @@ package com.xceptance.xlt.report;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.xceptance.common.util.SimpleArrayList;
 import com.xceptance.common.util.SynchronizingCounter;
 import com.xceptance.xlt.api.engine.Data;
@@ -15,12 +18,17 @@ import me.tongfei.progressbar.ProgressBarStyle;
  * processing test results. It does not only pass the results from one thread to another, but makes sure as well that no
  * more than X threads are active at the same time.
  *
- * @see DataRecordReader
- * @see DataRecordParser
+ * @see DataReaderThread
+ * @see DataParserThread
  * @see StatisticsProcessor
  */
 public class Dispatcher
 {
+    /**
+     * Class logger.
+     */
+    private static final Log LOG = LogFactory.getLog(Dispatcher.class);
+    
     /**
      * The maximum number of lines in a chunk.
      */
@@ -29,7 +37,7 @@ public class Dispatcher
     /**
      * The maximum number of lines in a chunk.
      */
-    public static final int DEFAULT_QUEUE_LENGTH = 50;
+    public static final int DEFAULT_QUEUE_LENGTH = 20;
     
     /**
      * The number of directories that still need to be processed.
@@ -44,12 +52,23 @@ public class Dispatcher
     /**
      * The number of chunks that still need to be processed.
      */
-    private final SynchronizingCounter chunksToBeProcessed = new SynchronizingCounter();
+    private final SynchronizingCounter openDataChunkCount = new SynchronizingCounter();
 
     /**
-     * The line chunks waiting to be parsed.
+     * The data chunks waiting to be parsed that came from the readers
      */
-    private final BlockingQueue<LineChunk> lineChunkQueue;
+    private final BlockingQueue<DataChunk> readDataQueue;
+
+    /**
+     * The data that have been read and parsed, but not yet postprocessed aka merge-rules applied
+     */
+    private final BlockingQueue<SimpleArrayList<Data>> parsedDataQueue;
+
+    /**
+     * The data that has been read, parsed, and post processed aka merge rules applied, waiting to be 
+     * put into the statistics world
+     */
+//    private final BlockingQueue<DataChunk> postprocesseddDataQueue;
 
     /**
      * Size of the chunks in the queues
@@ -62,7 +81,7 @@ public class Dispatcher
     private final ProgressBar progressBar = new ProgressBar("Reading", 100, ProgressBarStyle.ASCII);
    
     /**
-     * Where the processed data goes for counting
+     * Where the processed data goes for final result evaluation
      */
     private final StatisticsProcessor statisticsProcessor;
     
@@ -76,8 +95,12 @@ public class Dispatcher
      */
     public Dispatcher(final ReportGeneratorConfiguration config, final StatisticsProcessor statisticsProcessor)
     {
-        lineChunkQueue = new LinkedBlockingQueue<>(config.threadQueueLength);
+        readDataQueue = new LinkedBlockingQueue<>(config.threadQueueLength);
+        parsedDataQueue = new LinkedBlockingQueue<>(config.threadQueueLength);
+//        postprocesseddDataQueue = new LinkedBlockingQueue<>(config.threadQueueLength);
+        
         chunkSize = config.threadQueueBucketSize;
+        
         this.statisticsProcessor = statisticsProcessor;
     }
 
@@ -96,19 +119,6 @@ public class Dispatcher
     public void beginReading() throws InterruptedException
     {
         progressBar.maxHint(totalDirectories.get());
-        progressBar.step();
-    }
-
-    /**
-     * Adds a new chunk of lines for further processing. Called by a reader thread.
-     *
-     * @param lineChunk
-     *            the line chunk
-     */
-    public void addNewLineChunk(final LineChunk lineChunk) throws InterruptedException
-    {
-        chunksToBeProcessed.increment();
-        lineChunkQueue.put(lineChunk);
     }
 
     /**
@@ -118,16 +128,31 @@ public class Dispatcher
     {
         remainingDirectories.decrement();
         progressBar.maxHint(totalDirectories.get());
+        progressBar.step();
     }
 
+    /**
+     * Adds a new chunk of lines for further processing. Called by a reader thread.
+     *
+     * @param lineChunk
+     *            the line chunk
+     */
+    public void addReadData(final DataChunk chunkOfLines) throws InterruptedException
+    {
+        openDataChunkCount.increment();
+   
+        readDataQueue.put(chunkOfLines);
+    }
+    
     /**
      * Returns a chunk of lines for further processing. Called by a parser thread.
      *
      * @return the line chunk
      */
-    public LineChunk getNextLineChunk() throws InterruptedException
+    public DataChunk retrieveReadData() throws InterruptedException
     {
-        final LineChunk c = lineChunkQueue.take();
+        final DataChunk c = readDataQueue.take();
+
         return c;
     }
 
@@ -137,18 +162,40 @@ public class Dispatcher
      * @param dataRecordChunk
      *            the data record chunk
      */
-    public void addNewParsedDataRecordChunk(final SimpleArrayList<Data> dataRecordChunk) throws InterruptedException
+    public void addParsedData(final SimpleArrayList<Data> records) throws InterruptedException
     {
-        statisticsProcessor.run(dataRecordChunk);
-        finishedProcessing();
+        parsedDataQueue.put(records);
     }
 
     /**
-     * Indicates that a processor thread has finished processing. Called by a processor thread.
+     * Returns a chunk of lines for further processing. Called by a parser thread.
+     *
+     * @return the line chunk
+     */
+    public SimpleArrayList<Data> retrieveParsedData() throws InterruptedException
+    {
+        final SimpleArrayList<Data> c = parsedDataQueue.take();
+        return c;
+    }
+    
+    /**
+     * Delivers a parsed chunk of data and puts it through the statisics processors
+     *
+     * @param dataRecordChunk
+     *            the data record chunk
+     */
+    public void addPostprocessedData(final SimpleArrayList<Data> records) throws InterruptedException
+    {
+        statisticsProcessor.run(records);
+        finishedProcessing();
+    }
+    
+    /**
+     * Indicates that a chunk has finished processing
      */
     private void finishedProcessing()
     {
-        chunksToBeProcessed.decrement();
+        openDataChunkCount.decrement();
     }
 
     /**
@@ -162,7 +209,7 @@ public class Dispatcher
         remainingDirectories.awaitZero();
 
         // wait for the data processor thread to finish data record chunks
-        chunksToBeProcessed.awaitZero();
+        openDataChunkCount.awaitZero();
         
         // stop progress
         progressBar.close();

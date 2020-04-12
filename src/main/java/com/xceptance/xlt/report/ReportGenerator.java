@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
@@ -23,7 +22,6 @@ import org.apache.commons.vfs2.Selectors;
 import org.apache.commons.vfs2.VFS;
 
 import com.xceptance.common.util.ProductInformation;
-import com.xceptance.xlt.api.engine.Data;
 import com.xceptance.xlt.api.report.ReportProvider;
 import com.xceptance.xlt.api.util.XltLogger;
 import com.xceptance.xlt.common.XltConstants;

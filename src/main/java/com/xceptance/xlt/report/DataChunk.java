@@ -9,7 +9,7 @@ import org.apache.commons.vfs2.FileObject;
  * Holds a chunk of result lines together with meta and processing information. Both types of info is needed by the
  * parser threads.
  */
-public class LineChunk
+public class DataChunk
 {
     /**
      * The data structure to collect the start time and name of an action. Needed to rename client performance timer
@@ -41,7 +41,7 @@ public class LineChunk
 
     private final String userNumber;
 
-    public LineChunk(final List<String> lines, final int baseLineNumber, final FileObject file, final String agentName,
+    public DataChunk(final List<String> lines, final int baseLineNumber, final FileObject file, final String agentName,
                      final String testCaseName, final String userNumber, final boolean collectActionNames, final boolean adjustTimerNames,
                      final ConcurrentSkipListMap<Long, String> actionNames)
     {

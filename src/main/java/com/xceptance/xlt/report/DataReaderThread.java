@@ -19,12 +19,12 @@ import com.xceptance.xlt.common.XltConstants;
 /**
  * Reads lines from the result files of a certain test user.
  */
-class DataRecordReader implements Runnable
+class DataReaderThread implements Runnable
 {
     /**
      * Class logger.
      */
-    private static final Log LOG = LogFactory.getLog(DataRecordReader.class);
+    private static final Log LOG = LogFactory.getLog(DataReaderThread.class);
 
     /**
      * Maps the start time of an action to the action name. This data structure is defined here (as it is tied to a
@@ -78,7 +78,7 @@ class DataRecordReader implements Runnable
      * @param dispatcher
      *            the dispatcher that coordinates result processing
      */
-    public DataRecordReader(final FileObject directory, final String agentName, final String testCaseName, final String userNumber,
+    public DataReaderThread(final FileObject directory, final String agentName, final String testCaseName, final String userNumber,
                             final AtomicLong totalLineCounter, final Dispatcher dispatcher)
     {
         this.directory = directory;
@@ -232,8 +232,7 @@ class DataRecordReader implements Runnable
                                          final boolean collectActionNames, final boolean adjustTimerName)
         throws InterruptedException
     {
-        final LineChunk lineChunk = new LineChunk(lines, baseLineNumber, file, agentName, testCaseName, userNumber, collectActionNames,
-                                                  adjustTimerName, actionNames);
-        dispatcher.addNewLineChunk(lineChunk);
+        final DataChunk lineChunk = new DataChunk(lines, baseLineNumber, file, agentName, testCaseName, userNumber, collectActionNames, adjustTimerName, actionNames);
+        dispatcher.addReadData(lineChunk);
     }
 }
