@@ -40,7 +40,11 @@ class StatisticsProcessor
      * The configured report providers. An array for less overhead.
      */
     private final List<ReportProvider> reportProviders;
-    //    private final List<ExecutorService> reportProvidersExecutors;
+
+    /**
+     * The thread pool for processing the statistics in providers in parallel
+     * Just per provider, because they are not synchronized
+     */
     private final KeyDistributedExecutor statisticsMaintenanceExecutor;
 
     /**
@@ -54,14 +58,6 @@ class StatisticsProcessor
     public StatisticsProcessor(final List<ReportProvider> reportProviders, final int threadCount)
     {
         this.reportProviders = reportProviders;
-        //        this.reportProvidersExecutors = new ArrayList<>();
-        //
-        //        for (int i = 0; i < reportProviders.size(); i++)
-        //        {
-        //            final ReportProvider r = reportProviders.get(i);
-        //            reportProvidersExecutors.add(Executors.newSingleThreadExecutor(new DaemonThreadFactory(c -> r.getClass().getSimpleName() + "-" + c)));
-        //        }
-
         statisticsMaintenanceExecutor = new KeyDistributedExecutor(Executors.newFixedThreadPool(threadCount, new DaemonThreadFactory(c -> "Providers-" + c)));
 
         maximumTime = 0;
@@ -88,15 +84,31 @@ class StatisticsProcessor
         return (minimumTime == Long.MAX_VALUE) ? 0 : minimumTime;
     }
 
-    public void run(final SimpleArrayList<Data> data)
+    /**
+     * Take the post processed data and put it into the statitics machinery to
+     * capture the final data points. 
+     * 
+     * @param data a chunk of post processed data for final statitics gathering
+     */
+    public void process(final SimpleArrayList<Data> data)
     {
         final List<Future<?>> tasks = new ArrayList<>();
 
-        tasks.add(statisticsMaintenanceExecutor.submit(data, () -> 
+        /**
+         * Capture the time stats independently because each provider
+         * runs a loop too and we only have to do it once
+         * 
+         * Ensures that we only run this once due to the use of the
+         * Threadly lib and the usage of this as sync key.
+         */
+        tasks.add(statisticsMaintenanceExecutor.submit(this, () -> 
         {
             maintainStatistics(data);
         }));
 
+        /**
+         * Create a task for each report provider and the full data set
+         */
         for (int i = 0; i < reportProviders.size(); i++)
         {
             final ReportProvider reportProvider = reportProviders.get(i);
@@ -106,11 +118,10 @@ class StatisticsProcessor
                 try
                 {
                     final int size = data.size();
+                    
                     for (int d = 0; d < size; d++)
                     {
-                        final Data record = data.get(d);
-
-                        reportProvider.processDataRecord(record);
+                        reportProvider.processDataRecord(data.get(d));
                     }
                 }
                 catch (final Throwable t)
@@ -120,6 +131,7 @@ class StatisticsProcessor
             }));
         }
 
+        // ok, we have to wait till the last provider is fed
         for (int i = 0; i < tasks.size(); i++)
         {
             try
@@ -140,37 +152,12 @@ class StatisticsProcessor
     }
 
     /**
-     * Processes the given data records by passing them to a report provider.
-     *
-     * @param reportProvider
-     *            the report provider
-     * @param data
-     *            the data records
-     */
-    private void processDataRecords(final ReportProvider reportProvider, final List<Data> data)
-    {
-        // process the data
-        final int size = data.size();
-        for (int i = 0; i < size; i++)
-        {
-            try
-            {
-                reportProvider.processDataRecord(data.get(i));
-            }
-            catch (final Throwable t)
-            {
-                LOG.error("Failed to process data record", t);
-            }
-        }
-    }
-
-    /**
      * Maintain our statistics
      *
      * @param data
      *            the data records
      */
-    private synchronized void maintainStatistics(final List<Data> data)
+    private void maintainStatistics(final List<Data> data)
     {
         long min = minimumTime;
         long max = maximumTime;

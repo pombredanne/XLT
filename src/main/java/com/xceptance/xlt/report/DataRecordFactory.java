@@ -66,7 +66,7 @@ public class DataRecordFactory
     {
         // get the type code
         // get the respective data record class
-        final Class<? extends Data> c = classes[s.charAt(0)- offset];
+        final Class<? extends Data> c = classes[s.charAt(0) - offset];
 
         // create the statistics object
         final Data stats = c.newInstance();
