@@ -28,7 +28,7 @@ public class StatusCodeRequestFilter extends AbstractPatternRequestFilter
      */
     public StatusCodeRequestFilter(final String regex, final boolean exclude)
     {
-        super("s", regex, exclude);
+        super("s", regex, exclude, 50);
     }
 
     /**

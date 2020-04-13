@@ -28,7 +28,7 @@ public class RequestNameRequestFilter extends AbstractPatternRequestFilter
      */
     public RequestNameRequestFilter(final String regex, final boolean exclude)
     {
-        super("n", regex, exclude);
+        super("n", regex, exclude, 500);
     }
 
     /**

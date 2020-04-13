@@ -28,7 +28,7 @@ public class ContentTypeRequestFilter extends AbstractPatternRequestFilter
      */
     public ContentTypeRequestFilter(final String regex, final boolean exclude)
     {
-        super("c", regex, exclude);
+        super("c", regex, exclude, 100);
     }
 
     /**
