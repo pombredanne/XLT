@@ -1,10 +1,15 @@
 package com.xceptance.xlt.report.mergerules;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.xceptance.common.collection.LRUHashMap;
 import com.xceptance.common.lang.ThrowableUtils;
 import com.xceptance.common.util.RegExUtils;
 import com.xceptance.xlt.api.engine.RequestData;
@@ -14,6 +19,23 @@ import com.xceptance.xlt.api.engine.RequestData;
  */
 public abstract class AbstractPatternRequestFilter extends AbstractRequestFilter
 {
+    /**
+     * Cache the expensive stuff but with little sync overhead
+     */
+    private ThreadLocal<Map<String, Object>> cache = new ThreadLocal<Map<String, Object>>() 
+    {
+        @Override 
+        protected Map<String, Object> initialValue() 
+        {
+            return new LRUHashMap<>(1001);
+        }
+    };
+
+    /**
+     * Just a place holder for a NULL
+     */
+    private static final Object NULL = new Object();
+
     /**
      * The pattern this filter uses.
      */
@@ -63,7 +85,7 @@ public abstract class AbstractPatternRequestFilter extends AbstractRequestFilter
     }
 
     /**
-     * Returns the text to examine from the passed request data object.
+     * Returns the text to examine from the passed request data object.d
      *
      * @return the text
      */
@@ -81,9 +103,31 @@ public abstract class AbstractPatternRequestFilter extends AbstractRequestFilter
             return Boolean.TRUE;
         }
 
-        final Matcher matcher = pattern.matcher(getText(requestData));
+        // get the data to match against
+        final String text = getText(requestData);
 
-        return (matcher.find() ^ isExclude) ? matcher : null;
+        // get us a local reference to the cache
+        final Map<String, Object> cache = this.cache.get();
+
+        Object result = cache.get(text);
+        if (result == null)
+        {
+            // not found, produce and cache
+            final Matcher matcher = pattern.matcher(getText(requestData));
+
+            result = (matcher.find() ^ isExclude) ? matcher : NULL;
+            cache.put(text, result);
+        }
+
+        // ok, we got one, just see if this is NULL or a match
+        if (result == NULL)
+        {
+            return null;
+        }
+        else
+        {
+            return ((Matcher) result).toMatchResult();
+        }
     }
 
     /**
@@ -99,7 +143,7 @@ public abstract class AbstractPatternRequestFilter extends AbstractRequestFilter
 
         try
         {
-            return ((Matcher) filterState).group(capturingGroupIndex);
+            return ((MatchResult) filterState).group(capturingGroupIndex);
         }
         catch (final IndexOutOfBoundsException ioobe)
         {

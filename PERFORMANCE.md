@@ -161,6 +161,10 @@ Reworked post inside parser code
 24,909,446 (98,104 ms) - (253,909 lines/s)
 System: 6.95 s, User: 498.41 s, Context I/V: 91081/55857
 
+Known data classes are inited directly and not indirectly in DataFactory
+24,909,446 (92,687 ms) - (268,748 lines/s)
+System: 7.01 s, User: 471.53 s, Context I/V: 93500/55431
+
 
 
 #Idea

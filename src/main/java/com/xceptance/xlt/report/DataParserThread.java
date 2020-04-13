@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.vfs2.FileObject;
 
 import com.xceptance.common.util.SimpleArrayList;
 import com.xceptance.xlt.api.engine.ActionData;
@@ -101,6 +102,16 @@ class DataParserThread implements Runnable
                 final DataChunk lineChunk = dispatcher.retrieveReadData();
                 final List<String> lines = lineChunk.getLines();
 
+                final String agentName = lineChunk.getAgentName();
+                final String testCaseName = lineChunk.getTestCaseName();
+                final String userNumber = lineChunk.getUserNumber(); 
+                final boolean collectActionNames = lineChunk.getCollectActionNames();
+                final boolean adjustTimerName = lineChunk.getAdjustTimerNames();
+                final FileObject file = lineChunk.getFile();
+                
+                final long _fromTime = fromTime;
+                final long _toTime = toTime;
+                
                 // parse the chunk of lines and preprocess the results
                 final SimpleArrayList<Data> dataRecordChunk = new SimpleArrayList<>(lines.size());
 
@@ -109,20 +120,26 @@ class DataParserThread implements Runnable
                 final int size = lines.size();
                 for (int i = 0; i < size; i++)
                 {
-                    final Data data = parseLine(lines.get(i), lineNumber, lineChunk);
+                    Data data = parseLine(lines.get(i), lineNumber, file);
                     if (data != null)
                     {
-                        if (data instanceof RequestData)
+                        if (filterByTime(data, _fromTime, _toTime) == false)
                         {
-                            final RequestData result = postprocess((RequestData) data, requestProcessingRules, removeIndexes);
-                            if (result != null) 
+                            data = applyDataAdjustments(data, agentName, testCaseName, userNumber,
+                                                        collectActionNames, lineChunk, adjustTimerName);
+
+                            if (data instanceof RequestData)
                             {
-                                dataRecordChunk.add(result);
+                                final RequestData result = postprocess((RequestData) data, requestProcessingRules, removeIndexes);
+                                if (result != null) 
+                                {
+                                    dataRecordChunk.add(result);
+                                }
                             }
-                        }
-                        else
-                        {
-                            dataRecordChunk.add(data);
+                            else
+                            {
+                                dataRecordChunk.add(data);
+                            }
                         }
                     }
 
@@ -146,61 +163,71 @@ class DataParserThread implements Runnable
      *            the line to parse
      * @param lineNumber
      *            the number of the line in its file (for logging purposes)
-     * @param lineChunk
-     *            the line chunk the line belongs to
-     * @return the parsed data record, or <code>null</code> if the line could not be parsed or the data record's
-     *         timestamp was outside the configured time period
+     * @param file
+     *              the file it came from for error reporting just in case
+     * @return the parsed data record
      */
-    private Data parseLine(final String line, final int lineNumber, final DataChunk lineChunk)
+    private Data parseLine(final String line, final int lineNumber, final FileObject file)
     {
         try
         {
             // parse the data record
-            final Data dataRecord = dataRecordFactory.createStatistics(line);
-
-            // skip the data record if it was not generated in the given time period
-            final long time = dataRecord.getTime();
-            if (time < fromTime || time > toTime)
-            {
-                return null;
-            }
-
-            // set general fields
-            dataRecord.setAgentName(lineChunk.getAgentName());
-            dataRecord.setTransactionName(lineChunk.getTestCaseName());
-
-            // set special fields / special handling
-            if (dataRecord instanceof TransactionData)
-            {
-                final TransactionData td = (TransactionData) dataRecord;
-                td.setTestUserNumber(lineChunk.getUserNumber());
-            }
-            else if (lineChunk.getCollectActionNames() && dataRecord instanceof ActionData)
-            {
-                // store the action name/time for later use
-                lineChunk.getActionNames().put(dataRecord.getTime(), dataRecord.getName());
-            }
-            else if (lineChunk.getAdjustTimerNames() && (dataRecord instanceof RequestData || dataRecord instanceof PageLoadTimingData))
-            {
-                // rename web driver requests/custom timers using the previously stored action names
-                final Entry<Long, String> entry = lineChunk.getActionNames().floorEntry(time);
-                final String actionName = (entry != null) ? entry.getValue() : "UnknownAction";
-
-                final Matcher m = WD_TIMER_NAME_PATTERN.matcher(dataRecord.getName());
-                dataRecord.setName(m.replaceFirst(actionName));
-            }
-
-            return dataRecord;
+            return dataRecordFactory.createStatistics(line);
         }
         catch (final Exception ex)
         {
-            final String msg = String.format("Failed to parse data record at line %,d in file '%s': %s", lineNumber, lineChunk.getFile(),
-                                             ex);
+            final String msg = String.format("Failed to parse data record at line %,d in file '%s': %s", lineNumber, file, ex);
             LOG.error(msg);
             ex.printStackTrace();
 
             return null;
         }
+    }
+    
+    private boolean filterByTime(final Data data, final long fromTime, final long toTime)
+    {
+        // skip the data record if it was not generated in the given time period
+        final long time = data.getTime();
+        if (time < fromTime || time > toTime)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private Data applyDataAdjustments(final Data data, final String agentName, final String testCaseName, final String userNumber,
+                                      final boolean collectActionNames, final DataChunk lineChunk, boolean adjustTimerName)
+    {
+        // set general fields
+        data.setAgentName(agentName);
+        data.setTransactionName(testCaseName);
+
+        // set special fields / special handling
+        if (data instanceof TransactionData)
+        {
+            final TransactionData td = (TransactionData) data;
+            td.setTestUserNumber(userNumber);
+        }
+        else if (collectActionNames && data instanceof ActionData)
+        {
+            // store the action name/time for later use
+            lineChunk.getActionNames().put(data.getTime(), data.getName());
+        }
+        else if (adjustTimerName && (data instanceof RequestData || data instanceof PageLoadTimingData))
+        {
+            // rename web driver requests/custom timers using the previously stored action names
+            final Entry<Long, String> entry = lineChunk.getActionNames().floorEntry(data.getTime());
+            final String actionName = (entry != null) ? entry.getValue() : "UnknownAction";
+
+            final Matcher m = WD_TIMER_NAME_PATTERN.matcher(data.getName());
+            data.setName(m.replaceFirst(actionName));
+        }
+
+        return data;
+
     }
 
     /**

@@ -1,8 +1,17 @@
 package com.xceptance.xlt.report;
 
+import java.lang.reflect.Constructor;
 import java.util.Map;
 
+import com.xceptance.xlt.agent.JvmResourceUsageData;
+import com.xceptance.xlt.api.engine.ActionData;
+import com.xceptance.xlt.api.engine.CustomData;
+import com.xceptance.xlt.api.engine.CustomValue;
 import com.xceptance.xlt.api.engine.Data;
+import com.xceptance.xlt.api.engine.EventData;
+import com.xceptance.xlt.api.engine.PageLoadTimingData;
+import com.xceptance.xlt.api.engine.RequestData;
+import com.xceptance.xlt.api.engine.TransactionData;
 
 /**
  * Data classes hold processor for certain data types, such as Request, Transaction, Action, and
@@ -15,7 +24,7 @@ public class DataRecordFactory
     /**
      * The registered data handlers per Data(Record) type. 
      */
-    private final Class<? extends Data> classes[];
+    private final Constructor<? extends Data> ctrs[];
     private final int offset;
 
     /**
@@ -30,18 +39,33 @@ public class DataRecordFactory
         for (final Map.Entry<String, Class<? extends Data>> entry : dataClasses.entrySet())
         {
             char c = entry.getKey().charAt(0);
+            
             min = Math.min(min, c);
             max = Math.max(max, c);
         }
 
         offset = min;
-        classes = new Class[max - offset + 1];
+        ctrs = new Constructor[max - offset + 1];
         
         for (final Map.Entry<String, Class<? extends Data>> entry : dataClasses.entrySet())
         {
             final int typeCode = entry.getKey().charAt(0);
-            final Class<? extends Data> clazz = entry.getValue();
-            registerStatisticsClass(clazz, typeCode);
+            Constructor<? extends Data> clazz;
+            try
+            {
+                clazz = entry.getValue().getConstructor();
+                registerStatisticsClass(clazz, typeCode);
+            }
+            catch (NoSuchMethodException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            catch (SecurityException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
     }
     
@@ -51,9 +75,9 @@ public class DataRecordFactory
      * @param c
      * @param typeCode
      */
-    public void registerStatisticsClass(final Class<? extends Data> c, final int typeCode)
+    private void registerStatisticsClass(final Constructor<? extends Data> c, final int typeCode)
     {
-        classes[typeCode - offset] = c;
+        ctrs[typeCode - offset] = c;
     }
     
     /**
@@ -64,14 +88,27 @@ public class DataRecordFactory
      */
     public Data createStatistics(final String s) throws Exception
     {
-        // get the type code
-        // get the respective data record class
-        final Class<? extends Data> c = classes[s.charAt(0) - offset];
-
         // create the statistics object
-        final Data stats = c.newInstance();
-        stats.fromCSV(s);
+        final Data data;
+        
+        switch (s.charAt(0))
+        {
+            case 'R': data = new RequestData(); break;
+            case 'A': data = new ActionData(); break;
+            case 'T': data = new TransactionData(); break;
+            case 'C': data = new CustomData(); break;
+            case 'E': data = new EventData(); break;
+            case 'J': data = new JvmResourceUsageData(); break;
+            case 'V': data = new CustomValue(); break;
+            case 'P': data = new PageLoadTimingData(); break;
+            default: 
+                // we failed... try the expensive way
+                final Constructor<? extends Data> c = ctrs[s.charAt(0) - offset];
+                data = c.newInstance();
+        }
+        
+        data.fromCSV(s);
 
-        return stats;
+        return data;
     }
 }
