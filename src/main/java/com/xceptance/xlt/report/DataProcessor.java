@@ -47,7 +47,7 @@ public class DataProcessor
     /**
      * The pool of threads running postprocessing
      */
-    private final ExecutorService dataPostprocessingExecutor;
+//    private final ExecutorService dataPostprocessingExecutor;
 
     /**
      * The area where we handle the final data gathering aka collecting
@@ -134,9 +134,6 @@ public class DataProcessor
         // create the data record parser threads
         dataParserExecutor = Executors.newFixedThreadPool(config.parserThreadCount, new DaemonThreadFactory(i -> "DataParser-" + i));
 
-        // create the data postprocessing threads
-        dataPostprocessingExecutor = Executors.newFixedThreadPool(config.postprocessingThreadCount, new DaemonThreadFactory(i -> "DataPostprocessor-" + i));
-
         // create the dispatcher
         dispatcher = new Dispatcher(config, statisticsProcessor);
 
@@ -144,11 +141,7 @@ public class DataProcessor
         for (int i = 0; i < config.parserThreadCount; i++)
         {
             dataParserExecutor.execute(
-                                       new DataParserThread(dispatcher, dataRecordFactory, fromTime, toTime));
-        }
-        for (int i = 0; i < config.postprocessingThreadCount; i++)
-        {
-            dataPostprocessingExecutor.execute(new DataPostprocessingThread(dispatcher, config.getRequestProcessingRules(), config.getRemoveIndexesFromRequestNames()));
+                                       new DataParserThread(dispatcher, dataRecordFactory, fromTime, toTime, config));
         }
         
         LOG.info(String.format("Reading files from input directory '%s' ...\n", inputDir));
@@ -214,7 +207,7 @@ public class DataProcessor
         finally
         {
             // stop background threads
-            dataPostprocessingExecutor.shutdownNow();
+//            dataPostprocessingExecutor.shutdownNow();
             dataParserExecutor.shutdownNow();
             dataReaderExecutor.shutdownNow();
         }

@@ -117,11 +117,19 @@ All providers, no merge rules, 0-3, 24,909,446 (44,495 ms) - (559,826 lines/s)
 ### After url hash move
 All providers, no merge rules, 0-3, 24,909,446 (43,134 ms) - (577,490 lines/s)
 
+# Extra thread post processing handling
+## Google, 16 core
+### XLT
+8 core, 35,351 ms, System: 6.50 s, User: 329.50 s, Context I/V: 21962/301208
+16 core, 32,891 ms, System: 8.15 s, User: 455.84 s, Context I/V: 12966/335582
 
+### no post processing pool
+8 core, 24,621 ms, System: 10.45 s, User: 315.23 s, Context I/V: 24108/76186
+16 core, 21,897 ms,  System: 7.38 s, User: 500.25 s, Context I/V: 25453/125108
 
+### Post processing pool
+8 core, 26,158 ms, System: 5.19 s, User: 318.91 s, Context I/V: 25669/77068
+16 core, 23,490 ms, System: 7.31 s, User: 533.81 s, Context I/V: 28374/131967
 
 #Idea
-* Move expensive stuff into data preprocessing out of providers
-* Give a provider only what it needs (only its typecodes)
-* Providers announce what Data they want and get that only
 * Give each line to all providers in a thread

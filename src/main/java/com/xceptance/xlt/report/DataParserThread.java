@@ -14,6 +14,8 @@ import com.xceptance.xlt.api.engine.Data;
 import com.xceptance.xlt.api.engine.PageLoadTimingData;
 import com.xceptance.xlt.api.engine.RequestData;
 import com.xceptance.xlt.api.engine.TransactionData;
+import com.xceptance.xlt.report.mergerules.RequestProcessingRule;
+import com.xceptance.xlt.report.mergerules.RequestProcessingRuleResult;
 
 /**
  * Parses lines to data records and performs any data record preprocessing that can be done in parallel. Preprocessing
@@ -52,6 +54,11 @@ class DataParserThread implements Runnable
     private final long toTime;
 
     /**
+     * The general config of the report generator
+     */
+    private final ReportGeneratorConfiguration config;
+
+    /**
      * Constructor.
      *
      * @param dataRecordFactory
@@ -67,12 +74,14 @@ class DataParserThread implements Runnable
      * @param removeIndexesFromRequestNames
      *            whether to automatically remove any indexes from request names
      */
-    public DataParserThread(final Dispatcher dispatcher, final DataRecordFactory dataRecordFactory, final long fromTime, final long toTime)
+    public DataParserThread(final Dispatcher dispatcher, final DataRecordFactory dataRecordFactory, final long fromTime, final long toTime,
+                            final ReportGeneratorConfiguration config)
     {
         this.dataRecordFactory = dataRecordFactory;
         this.fromTime = fromTime;
         this.toTime = toTime;
         this.dispatcher = dispatcher;
+        this.config = config;
     }
 
     /**
@@ -81,6 +90,9 @@ class DataParserThread implements Runnable
     @Override
     public void run()
     {
+        final List<RequestProcessingRule> requestProcessingRules = config.getRequestProcessingRules();
+        final boolean removeIndexes = config.getRemoveIndexesFromRequestNames();
+
         while (true)
         {
             try
@@ -100,14 +112,25 @@ class DataParserThread implements Runnable
                     final Data data = parseLine(lines.get(i), lineNumber, lineChunk);
                     if (data != null)
                     {
-                        dataRecordChunk.add(data);
+                        if (data instanceof RequestData)
+                        {
+                            RequestData result = postprocess((RequestData) data, requestProcessingRules, removeIndexes);
+                            if (result != null) 
+                            {
+                                dataRecordChunk.add(result);
+                            }
+                        }
+                        else
+                        {
+                            dataRecordChunk.add(data);
+                        }
                     }
 
                     lineNumber++;
                 }
 
                 // deliver the chunk of parsed data records
-                dispatcher.addParsedData(dataRecordChunk);
+                dispatcher.addPostprocessedData(dataRecordChunk);
             }
             catch (final InterruptedException e)
             {
@@ -179,4 +202,68 @@ class DataParserThread implements Runnable
             return null;
         }
     }
+
+    /**
+     * Processes a request according to the configured request processing rules. Currently, this means renaming or
+     * discarding requests.
+     *
+     * @param requestData
+     *            the request data record
+     * @param removeIndexesFromRequestNames 
+     *              in case we want to clean the name too
+     * @return the processed request data record, or <code>null</code> if the data record is to be discarded
+     */
+    private RequestData postprocess(RequestData requestData, 
+                                    final List<RequestProcessingRule> requestProcessingRules, 
+                                    boolean removeIndexesFromRequestNames)
+    {
+        // fix up the name first (Product.1.2 -> Product) if so configured
+        if (removeIndexesFromRequestNames)
+        {
+            // @TODO Chance for more performance here
+            String requestName = requestData.getName();
+
+            final int firstDotPos = requestName.indexOf(".");
+            if (firstDotPos > 0)
+            {
+                requestName = requestName.substring(0, firstDotPos);
+                requestData.setName(requestName);
+            }
+        }
+
+        // remember the original name so we can restore it in case request processing fails
+        final String originalName = requestData.getName();
+
+        // execute all processing rules one after the other until processing is complete
+        final int size = requestProcessingRules.size();
+        for (int i = 0; i < size; i++)
+        {
+            final RequestProcessingRule requestProcessingRule = requestProcessingRules.get(i);
+
+            try
+            {
+                final RequestProcessingRuleResult result = requestProcessingRule.process(requestData);
+
+                requestData = result.requestData;
+
+                if (result.stopRequestProcessing)
+                {
+                    break;
+                }
+            }
+            catch (final Throwable t)
+            {
+                final String msg = String.format("Failed to apply request merge rule: %s\n%s", requestProcessingRule, t);
+                LOG.error(msg);
+
+                // restore the request's original name
+                requestData.setName(originalName);
+
+                break;
+            }
+        }
+
+        return requestData;
+    }
+
 }
