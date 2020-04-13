@@ -131,5 +131,18 @@ All providers, no merge rules, 0-3, 24,909,446 (43,134 ms) - (577,490 lines/s)
 8 core, 26,158 ms, System: 5.19 s, User: 318.91 s, Context I/V: 25669/77068
 16 core, 23,490 ms, System: 7.31 s, User: 533.81 s, Context I/V: 28374/131967
 
+# Just some stats T450s
+Pre PostPool
+24,909,446 (101,918 ms) - (244,407 lines/s)
+System: 8.00 s, User: 506.02 s, Context I/V: 106431/59236
+
+Postpooling as well
+24,909,446 (112,977 ms) - (220,482 lines/s)
+System: 8.50 s, User: 545.30 s, Context I/V: 120702/67704
+
+Reworked post with no extra pooling
+24,909,446 (98,104 ms) - (253,909 lines/s)
+System: 6.95 s, User: 498.41 s, Context I/V: 91081/55857
+
 #Idea
 * Give each line to all providers in a thread

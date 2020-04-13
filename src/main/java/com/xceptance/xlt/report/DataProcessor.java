@@ -45,11 +45,6 @@ public class DataProcessor
     private final ExecutorService dataParserExecutor;
 
     /**
-     * The pool of threads running postprocessing
-     */
-//    private final ExecutorService dataPostprocessingExecutor;
-
-    /**
      * The area where we handle the final data gathering aka collecting
      * of data for later reporting 
      */
