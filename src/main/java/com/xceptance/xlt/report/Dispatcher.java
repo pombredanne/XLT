@@ -60,17 +60,6 @@ public class Dispatcher
     private final BlockingQueue<DataChunk> readDataQueue;
 
     /**
-     * The data that have been read and parsed, but not yet postprocessed aka merge-rules applied
-     */
-    private final BlockingQueue<SimpleArrayList<Data>> parsedDataQueue;
-
-    /**
-     * The data that has been read, parsed, and post processed aka merge rules applied, waiting to be 
-     * put into the statistics world
-     */
-//    private final BlockingQueue<DataChunk> postprocesseddDataQueue;
-
-    /**
      * Size of the chunks in the queues
      */
     public final int chunkSize;
@@ -96,8 +85,6 @@ public class Dispatcher
     public Dispatcher(final ReportGeneratorConfiguration config, final StatisticsProcessor statisticsProcessor)
     {
         readDataQueue = new LinkedBlockingQueue<>(config.threadQueueLength);
-        parsedDataQueue = new LinkedBlockingQueue<>(config.threadQueueLength);
-//        postprocesseddDataQueue = new LinkedBlockingQueue<>(config.threadQueueLength);
         
         chunkSize = config.threadQueueBucketSize;
         
@@ -156,28 +143,6 @@ public class Dispatcher
         return c;
     }
 
-    /**
-     * Delivers a parsed chunk of data and puts it through the statisics processors
-     *
-     * @param dataRecordChunk
-     *            the data record chunk
-     */
-    public void addParsedData(final SimpleArrayList<Data> records) throws InterruptedException
-    {
-        parsedDataQueue.put(records);
-    }
-
-    /**
-     * Returns a chunk of lines for further processing. Called by a parser thread.
-     *
-     * @return the line chunk
-     */
-    public SimpleArrayList<Data> retrieveParsedData() throws InterruptedException
-    {
-        final SimpleArrayList<Data> c = parsedDataQueue.take();
-        return c;
-    }
-    
     /**
      * Delivers a parsed chunk of data and puts it through the statisics processors
      *
