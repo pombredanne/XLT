@@ -6,8 +6,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.xceptance.common.collection.LRUCache;
-import com.xceptance.common.collection.LRUHashMap;
+import com.xceptance.common.collection.LRUFastHashMap;
 import com.xceptance.common.lang.ThrowableUtils;
 import com.xceptance.common.util.RegExUtils;
 import com.xceptance.xlt.api.engine.RequestData;
@@ -20,12 +19,12 @@ public abstract class AbstractPatternRequestFilter extends AbstractRequestFilter
     /**
      * Cache the expensive stuff but with little sync overhead
      */
-    private ThreadLocal<LRUHashMap<String, Matcher>> cache = new ThreadLocal<LRUHashMap<String, Matcher>>() 
+    private ThreadLocal<LRUFastHashMap<String, Matcher>> cache = new ThreadLocal<LRUFastHashMap<String, Matcher>>() 
     {
         @Override 
-        protected LRUHashMap<String, Matcher> initialValue() 
+        protected LRUFastHashMap<String, Matcher> initialValue() 
         {
-            return new LRUHashMap<>(cacheSize);
+            return new LRUFastHashMap<>(cacheSize);
         }
     };
 
@@ -33,7 +32,7 @@ public abstract class AbstractPatternRequestFilter extends AbstractRequestFilter
      * The size of the cache, because different filters have different demands
      */
     private final int cacheSize;
-    
+
     /**
      * Just a place holder for a NULL
      */
@@ -112,7 +111,7 @@ public abstract class AbstractPatternRequestFilter extends AbstractRequestFilter
         final String text = getText(requestData);
 
         // get us a local reference to the cache
-        final LRUHashMap<String, Matcher> cache = this.cache.get();
+        final LRUFastHashMap<String, Matcher> cache = this.cache.get();
 
         Matcher result = cache.get(text);
         if (result == null)
