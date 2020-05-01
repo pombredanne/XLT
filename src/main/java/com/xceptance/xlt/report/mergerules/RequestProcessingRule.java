@@ -50,6 +50,11 @@ public class RequestProcessingRule
     private final PlaceholderPosition[] newNamePlaceholders;
 
     /**
+     * The rule to stop things
+     */
+    private static RequestProcessingRuleResult EMPTY_RULE_RESULT = new RequestProcessingRuleResult(null, true);
+    
+    /**
      * Constructor.
      *
      * @param newName
@@ -250,7 +255,7 @@ public class RequestProcessingRule
         if (dropOnMatch)
         {
             // stop request processing with a null request
-            return new RequestProcessingRuleResult(null, true);
+            return EMPTY_RULE_RESULT;
         }
 
         // anything to do?
