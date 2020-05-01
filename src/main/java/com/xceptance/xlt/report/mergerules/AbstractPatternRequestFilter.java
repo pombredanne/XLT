@@ -110,29 +110,40 @@ public abstract class AbstractPatternRequestFilter extends AbstractRequestFilter
         // get the data to match against
         final String text = getText(requestData);
 
-        // get us a local reference to the cache
-        final LRUFastHashMap<String, Matcher> cache = this.cache.get();
-
-        Matcher result = cache.get(text);
-        if (result == null)
+        // only cache if we want that, there are areas where caching does not make sense and wastes
+        // a lot of time, such as urls
+        if (cacheSize > 0)
         {
-            // not found, produce and cache
-            final Matcher matcher = pattern.matcher(text);
+            // get us a local reference to the cache
+            final LRUFastHashMap<String, Matcher> cache = this.cache.get();
 
-            result = (matcher.find() ^ isExclude) ? matcher : NULL;
-            cache.put(text, result);
-        }
-        
-        // ok, we got one, just see if this is NULL or a match
-        if (result == NULL)
-        {
-            return null;
+            Matcher result = cache.get(text);
+            if (result == null)
+            {
+                // not found, produce and cache
+                final Matcher matcher = pattern.matcher(text);
+
+                result = (matcher.find() ^ isExclude) ? matcher : NULL;
+                cache.put(text, result);
+            }
+
+            // ok, we got one, just see if this is NULL or a match
+            if (result == NULL)
+            {
+                return null;
+            }
+            else
+            {
+                // the strange trick with a static stand in for a Matcher
+                // helps us to safe a cast here and earlier
+                return result.toMatchResult();
+            }
         }
         else
         {
-            // the strange trick with a static stand in for a Matcher
-            // helps us to safe a cast here and earlier
-            return result.toMatchResult();
+            final Matcher matcher = pattern.matcher(text);
+
+            return (matcher.find() ^ isExclude) ? matcher : null;
         }
     }
 

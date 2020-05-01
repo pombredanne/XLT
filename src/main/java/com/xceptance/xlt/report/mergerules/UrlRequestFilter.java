@@ -28,7 +28,9 @@ public class UrlRequestFilter extends AbstractPatternRequestFilter
      */
     public UrlRequestFilter(final String regex, final boolean exclude)
     {
-        super("u", regex, exclude, 10000);
+        // we don't want to cache here due to the large variance in 
+        // urls, we be too costly
+        super("u", regex, exclude, 0);
     }
 
     /**
