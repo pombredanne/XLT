@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.xceptance.common.lang.ThrowableUtils;
 import com.xceptance.common.util.RegExUtils;
+import com.xceptance.common.util.XltCharBuffer;
 import com.xceptance.xlt.common.XltConstants;
 
 /**
@@ -34,7 +35,7 @@ public class TransactionData extends TimerData
     /**
      * The type code ("T").
      */
-    private static final String TYPE_CODE = "T";
+    private static final char TYPE_CODE = 'T';
 
     /**
      * The last part of the path to the directory where dumped pages can be found. Kept separate to make as much use of
@@ -267,12 +268,12 @@ public class TransactionData extends TimerData
      * {@inheritDoc}
      */
     @Override
-    protected void parseValues(final List<String> values)
+    protected void parseValues(final List<XltCharBuffer> values)
     {
         super.parseValues(values);
 
         // process the stack trace
-        stackTrace = values.get(5).trim();
+        stackTrace = values.get(5).toString().trim();
         if (stackTrace.length() == 0)
         {
             stackTrace = null;
@@ -287,14 +288,14 @@ public class TransactionData extends TimerData
         final int length = values.size();
         if (length > 6)
         {
-            setFailedActionName(values.get(6));
+            setFailedActionName(values.get(6).toString());
         }
 
         // test user number and directory name (since XLT 4.13.2)
         if (length > 7)
         {
-            setTestUserNumber(values.get(7));
-            setDirectoryName(values.get(8));
+            setTestUserNumber(values.get(7).toString());
+            setDirectoryName(values.get(8).toString());
         }
         else
         {

@@ -24,7 +24,7 @@ public class ActionData extends TimerData
     /**
      * The typecode.
      */
-    private static final String TYPE_CODE = "A";
+    private static final char TYPE_CODE = 'A';
 
     /**
      * Creates a new ActionData object.

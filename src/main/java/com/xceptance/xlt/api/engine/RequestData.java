@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.xceptance.common.lang.ParseNumbers;
 import com.xceptance.common.lang.StringHasher;
+import com.xceptance.common.util.XltCharBuffer;
 import com.xceptance.xlt.engine.util.UrlUtils;
 
 /**
@@ -32,7 +33,7 @@ public class RequestData extends TimerData
     /**
      * The type code.
      */
-    private static final String TYPE_CODE = "R";
+    private static final char TYPE_CODE = 'R';
 
     /**
      * The character used to separate multiple IP addresses.
@@ -669,7 +670,7 @@ public class RequestData extends TimerData
      * {@inheritDoc}
      */
     @Override
-    protected void parseValues(final List<String> values)
+    protected void parseValues(final List<XltCharBuffer> values)
     {
         super.parseValues(values);
 
@@ -679,8 +680,8 @@ public class RequestData extends TimerData
 
         if (values.size() > 22)
         {
-            setUrl(values.get(8));
-            contentType = values.get(9);
+            setUrl(values.get(8).toString());
+            contentType = values.get(9).toString();
 
             setConnectTime(ParseNumbers.parseInt(values.get(10)));
             setSendTime(ParseNumbers.parseInt(values.get(11)));
@@ -688,19 +689,18 @@ public class RequestData extends TimerData
             setReceiveTime(ParseNumbers.parseInt(values.get(13)));
             setTimeToFirstBytes(ParseNumbers.parseInt(values.get(14)));
             setTimeToLastBytes(ParseNumbers.parseInt(values.get(15)));
-            setRequestId(values.get(16));
-            setHttpMethod(values.get(17));
-            setFormDataEncoding(values.get(18));
-            setFormData(values.get(19));
+            setRequestId(values.get(16).toString());
+            setHttpMethod(values.get(17).toString());
+            setFormDataEncoding(values.get(18).toString());
+            setFormData(values.get(19).toString());
             setDnsTime(ParseNumbers.parseInt(values.get(20)));
-            ipAddresses = values.get(21);
-            setResponseId(values.get(22));
+            ipAddresses = values.get(21).toString();
+            setResponseId(values.get(22).toString());
         }
         else
         {
             // do legacy, translate to array because it does rarely happen
-            parseLegacyValues(values.toArray(new String[0]));
-            System.out.println("ff");
+            parseLegacyValues(values);
         }
     }
 
@@ -710,47 +710,47 @@ public class RequestData extends TimerData
      * @param values
      *            parsed data
      */
-    private void parseLegacyValues(final String[] values)
+    private void parseLegacyValues(final List<XltCharBuffer> values)
     {
         // be defensive so older reports can be re-generated
-        final int length = values.length;
+        final int length = values.size();
         if (length > 8)
         {
-            url = values[8];
+            url = values.get(8).toString();
         }
 
         if (length > 9)
         {
-            contentType = values[9];
+            contentType = values.get(9).toString();
         }
 
         if (length > 10)
         {
-            setConnectTime(ParseNumbers.parseInt(values[10]));
-            setSendTime(ParseNumbers.parseInt(values[11]));
-            setServerBusyTime(ParseNumbers.parseInt(values[12]));
-            setReceiveTime(ParseNumbers.parseInt(values[13]));
-            setTimeToFirstBytes(ParseNumbers.parseInt(values[14]));
-            setTimeToLastBytes(ParseNumbers.parseInt(values[15]));
+            setConnectTime(ParseNumbers.parseInt(values.get(10)));
+            setSendTime(ParseNumbers.parseInt(values.get(11)));
+            setServerBusyTime(ParseNumbers.parseInt(values.get(12)));
+            setReceiveTime(ParseNumbers.parseInt(values.get(13)));
+            setTimeToFirstBytes(ParseNumbers.parseInt(values.get(14)));
+            setTimeToLastBytes(ParseNumbers.parseInt(values.get(15)));
         }
 
         if (length > 16)
         {
-            setRequestId(values[16]);
+            setRequestId(values.get(16).toString());
         }
 
         // XLT 4.6.0
         if (length > 17)
         {
-            setHttpMethod(values[17]);
-            setFormDataEncoding(values[18]);
-            setFormData(values[19]);
+            setHttpMethod(values.get(17).toString());
+            setFormDataEncoding(values.get(18).toString());
+            setFormData(values.get(19).toString());
         }
 
         // XLT 4.7.0
         if (length > 20)
         {
-            setDnsTime(ParseNumbers.parseInt(values[20]));
+            setDnsTime(ParseNumbers.parseInt(values.get(20)));
         }
     }
 }

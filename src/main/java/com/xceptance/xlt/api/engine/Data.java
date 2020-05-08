@@ -75,7 +75,7 @@ public interface Data
      * 
      * @return the type code
      */
-    public String getTypeCode();
+    public char getTypeCode();
 
     /**
      * Sets the name of the agent that produced this data record. Only used during report generation or analysis.
