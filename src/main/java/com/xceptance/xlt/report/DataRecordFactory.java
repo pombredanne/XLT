@@ -39,14 +39,14 @@ public class DataRecordFactory
         for (final Map.Entry<String, Class<? extends Data>> entry : dataClasses.entrySet())
         {
             char c = entry.getKey().charAt(0);
-            
+
             min = Math.min(min, c);
             max = Math.max(max, c);
         }
 
         offset = min;
         ctrs = new Constructor[max - offset + 1];
-        
+
         for (final Map.Entry<String, Class<? extends Data>> entry : dataClasses.entrySet())
         {
             final int typeCode = entry.getKey().charAt(0);
@@ -68,7 +68,7 @@ public class DataRecordFactory
             }
         }
     }
-    
+
     /**
      * Register a new handler under its type code
      * 
@@ -79,7 +79,7 @@ public class DataRecordFactory
     {
         ctrs[typeCode - offset] = c;
     }
-    
+
     /**
      * Return the 
      * @param s
@@ -89,8 +89,9 @@ public class DataRecordFactory
     public Data createStatistics(final String s) throws Exception
     {
         // create the statistics object
+        final Constructor<? extends Data> c = ctrs[s.charAt(0)  - offset];
         final Data data = c.newInstance();
-        
+
         data.fromCSV(s);
 
         return data;
