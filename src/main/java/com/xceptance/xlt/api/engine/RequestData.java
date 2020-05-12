@@ -546,14 +546,30 @@ public class RequestData extends TimerData
     }
 
     /**
-     * Sets the request's URL.
+     * Sets the request's URL. This is for encding!
      * 
      * @param url
      *            the URL
      */
     public void setUrl(final String url)
     {
-        final String hostName = UrlUtils.retrieveHostFromUrl(url);
+        this.url = url;
+    }
+    
+    /**
+     * Sets the request's URL. Uses a char buffer for efficiency. 
+     * This is for decoding.
+     * 
+     * @param url
+     *            the URL
+     */
+    public void setUrl(final XltCharBuffer url)
+    {
+        // remove the fragment if any and compute the hash
+        this.hashCodeOfUrlWithoutFragment = StringHasher.hashCodeWithLimit(url, '#');
+
+        final String _url = url.toString();
+        final String hostName = UrlUtils.retrieveHostFromUrl(_url);
         if (hostName == null || hostName.length() == 0)
         {
             host = UNKNOWN_HOST;
@@ -563,10 +579,7 @@ public class RequestData extends TimerData
             host = hostName;
         }
         
-        this.url = url;
-        
-        // remove the fragment if any and compute the hash
-        this.hashCodeOfUrlWithoutFragment = StringHasher.hashCodeWithLimit(url, '#');
+        this.url = _url;
     }
 
     /**
@@ -680,7 +693,7 @@ public class RequestData extends TimerData
 
         if (values.size() > 22)
         {
-            setUrl(values.get(8).toString());
+            setUrl(values.get(8));
             contentType = values.get(9).toString();
 
             setConnectTime(ParseNumbers.parseInt(values.get(10)));

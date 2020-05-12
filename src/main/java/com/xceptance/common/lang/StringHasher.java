@@ -1,5 +1,7 @@
 package com.xceptance.common.lang;
 
+import com.xceptance.common.util.XltCharBuffer;
+
 public class StringHasher
 {
     /**
@@ -21,6 +23,34 @@ public class StringHasher
             return s.hashCode();
         }
     }    
+    
+    /**
+     * Hashes the string up to the terminal character. This always hashes the string
+     * without falling back to the original hash code, hence the code above checks first.
+     * This speeds up the code.
+     */
+    public static int hashCodeWithLimit(final XltCharBuffer s, final char limitingChar)
+    {
+        int hash = 1;
+        
+        final int length = s.length();
+        for (int i = 0; i < length; i++) 
+        {
+            final char c = s.get(i);
+            
+            if (c != limitingChar)
+            {
+                hash = 31 * hash + c;
+            }
+            else
+            {
+                // early end reached
+                break;
+            }
+        }
+        
+        return hash;
+    }
     
     /**
      * Hashes the string up to the terminal character. This always hashes the string
