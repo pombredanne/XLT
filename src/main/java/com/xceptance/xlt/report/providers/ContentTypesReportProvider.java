@@ -43,11 +43,14 @@ public class ContentTypesReportProvider extends AbstractReportProvider
         {
             final RequestData reqStats = (RequestData) stat;
 
-            String contentType = reqStats.getContentType();
-            if (StringUtils.isBlank(contentType))
-            {
-                contentType = "(none)";
-            }
+            final String contentType = reqStats.getContentType();
+            
+            // the content type is never null, it might be just "" and if this is " " or similar
+            // we don't care and keep the speed, (none is set where it is produced)
+//            if (contentType.length() == 0)
+//            {
+//                contentType = "(none)";
+//            }
 
             ContentTypeReport contentTypeReport = contentTypeReports.get(contentType);
             if (contentTypeReport == null)
