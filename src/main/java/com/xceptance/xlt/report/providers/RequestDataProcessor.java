@@ -22,14 +22,13 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.xy.XYIntervalSeries;
 import org.jfree.data.xy.XYIntervalSeriesCollection;
 
-import com.xceptance.common.lang.StringHasher;
 import com.xceptance.xlt.api.engine.Data;
 import com.xceptance.xlt.api.engine.RequestData;
 import com.xceptance.xlt.api.report.AbstractReportProvider;
 import com.xceptance.xlt.report.ReportGeneratorConfiguration;
 import com.xceptance.xlt.report.util.HistogramValueSet;
-import com.xceptance.xlt.report.util.JFreeChartUtils;
 import com.xceptance.xlt.report.util.IntMinMaxValueSet;
+import com.xceptance.xlt.report.util.JFreeChartUtils;
 import com.xceptance.xlt.report.util.ReportUtils;
 import com.xceptance.xlt.report.util.SegmentationValueSet;
 import com.xceptance.xlt.report.util.SummaryStatistics;
@@ -63,7 +62,7 @@ public class RequestDataProcessor extends BasicTimerDataProcessor
      * A set of hash codes generated from URL strings. Used to determine the number of distinct URLs used. Since storing
      * the URL strings can be memory-consuming, only their hash code is stored.
      */
-    private final TIntSet distinctUrlHashCodeSet = new TIntHashSet();
+    private final TIntSet distinctUrlHashCodeSet = new TIntHashSet(127);
 
     /**
      * A set of distinct URLs. Contains at most {@link #MAXIMUM_NUMBER_OF_URLS} entries.
