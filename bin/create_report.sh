@@ -17,7 +17,7 @@ CLASSPATH="$XLT_HOME"/target/classes:"$XLT_HOME"/lib/*
 
 # setup other Java options
 JAVA_OPTIONS=
-JAVA_OPTIONS="$JAVA_OPTIONS -Xms4g -Xmx4g"
+JAVA_OPTIONS="$JAVA_OPTIONS -Xmx4g -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints"
 JAVA_OPTIONS="$JAVA_OPTIONS -Dcom.xceptance.xlt.home=\"$XLT_HOME\""
 JAVA_OPTIONS="$JAVA_OPTIONS -Dlog4j.configuration=\"file:$XLT_CONFIG_DIR/reportgenerator.properties\""
 JAVA_OPTIONS="$JAVA_OPTIONS -Djava.awt.headless=true"
