@@ -9,6 +9,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.vfs2.FileObject;
 
+import com.xceptance.common.lang.OpenStringBuilder;
 import com.xceptance.common.util.SimpleArrayList;
 import com.xceptance.xlt.api.engine.ActionData;
 import com.xceptance.xlt.api.engine.Data;
@@ -100,7 +101,7 @@ class DataParserThread implements Runnable
             {
                 // get a chunk of lines
                 final DataChunk lineChunk = dispatcher.retrieveReadData();
-                final List<String> lines = lineChunk.getLines();
+                final List<OpenStringBuilder> lines = lineChunk.getLines();
 
                 final String agentName = lineChunk.getAgentName();
                 final String testCaseName = lineChunk.getTestCaseName();
@@ -167,7 +168,7 @@ class DataParserThread implements Runnable
      *              the file it came from for error reporting just in case
      * @return the parsed data record
      */
-    private Data parseLine(final String line, final int lineNumber, final FileObject file)
+    private Data parseLine(final OpenStringBuilder line, final int lineNumber, final FileObject file)
     {
         try
         {
@@ -176,7 +177,7 @@ class DataParserThread implements Runnable
         }
         catch (final Exception ex)
         {
-            final String msg = String.format("Failed to parse data record at line %,d in file '%s': %s", lineNumber, file, ex);
+            final String msg = String.format("Failed to parse data record at line %,d in file '%s': %s\nLine is: ", lineNumber, file, ex, line.toString());
             LOG.error(msg);
             ex.printStackTrace();
 

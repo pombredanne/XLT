@@ -3,7 +3,7 @@ package com.xceptance.common.util;
 import java.text.ParseException;
 import java.util.List;
 
-import com.xceptance.common.util.SimpleArrayList;
+import com.xceptance.common.lang.OpenStringBuilder;
 
 /**
  * The {@link CsvUtilsDecode} class provides helper methods to encode and decode values to/from the CSV format. Note that we
@@ -47,7 +47,7 @@ public final class CsvUtilsDecode
      */
     public static List<XltCharBuffer> parse(final String s)
     {
-        return parse(s.toCharArray(), COMMA);
+        return parse(new OpenStringBuilder(s), COMMA);
     }
 
     private static final int NONE = 0;
@@ -67,10 +67,10 @@ public final class CsvUtilsDecode
      * @return the CSV-encoded data record
      * @throws ParseException 
      */
-    public static List<XltCharBuffer> parse(final char[] _src, final char fieldSeparator)
+    public static List<XltCharBuffer> parse(final OpenStringBuilder _src, final char fieldSeparator)
     {
         final SimpleArrayList<XltCharBuffer> result = new SimpleArrayList<>(30);
-        final XltCharBuffer src = new XltCharBuffer(_src);
+        final XltCharBuffer src = new XltCharBuffer(_src.getCharArray(), 0, _src.length());
         
         final int size = src.length();
 

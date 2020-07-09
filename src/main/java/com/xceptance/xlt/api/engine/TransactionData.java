@@ -284,6 +284,11 @@ public class TransactionData extends TimerData
             stackTrace = stackTrace.replace("\\", "\n");
         }
 
+//        if (this.getName().equals("TGuestOrderAndSignUp") && values.get(6).toString().startsWith("RefineByCategory"))
+//        {
+//            System.out.println("HHH");
+//        }
+        
         // be defensive so a report can be generated also for older results
         final int length = values.size();
         if (length > 6)

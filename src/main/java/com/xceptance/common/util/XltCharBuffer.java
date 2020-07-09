@@ -24,7 +24,7 @@ public class XltCharBuffer
         this.length = src != null ? src.length : 0;
     }
     
-    XltCharBuffer(final char[] src, final int from, final int length)
+    public XltCharBuffer(final char[] src, final int from, final int length)
     {
         this.src = src;
         this.from = from;

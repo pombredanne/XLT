@@ -1,29 +1,27 @@
 package com.xceptance.common.util;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 public class CSVUtilsDecodeTest
 {
-    private void test(String s, String... expected) 
+    private void test_noQuoteConversion(String s, String... expected) 
     {
-        String _s = s.replace("'", "\"");
-        
-        List<XltCharBuffer> result = CsvUtilsDecode.parse(_s);
-        
-//        System.out.printf("%s - %s - %s%n", _s, 
-//                        Arrays.stream(expected).collect(Collectors.joining("][", "[", "]")), 
-//                        Arrays.stream(result.toArray()).map(c -> c.toString()).collect(Collectors.joining("][", "[", "]")));
+        final List<XltCharBuffer> result = CsvUtilsDecode.parse(s);
         
         Assert.assertEquals(expected.length, result.size());
         for (int i = 0; i < expected.length; i++)
         {
             Assert.assertEquals(expected[i], result.get(i).toString());
         }
+    }
+
+    private void test(String s, String... expected) 
+    {
+        final String _s = s.replace("'", "\"");
+        test_noQuoteConversion(_s, expected);
     }
 
     /**
@@ -115,6 +113,13 @@ public class CSVUtilsDecodeTest
     }
 
     @Test
+    public void simpleQuotes() 
+    {
+        test_noQuoteConversion("'a'", "'a'");
+        test_noQuoteConversion("'a',\"foobar 'quotes' s\"", "'a'", "foobar 'quotes' s");
+    }
+    
+    @Test
     public void emptyCols() 
     {
         test("a,,,b,", "a", "", "", "b", "");
@@ -123,5 +128,12 @@ public class CSVUtilsDecodeTest
         test(",", "", "");
     }
 
-
+    @Test
+    public void parseLongLine()
+    {
+        test_noQuoteConversion("T,TBrowse,1571766200603,12786,true,\"java.lang.AssertionError: Response code does not match expected:<200> but was:<410> (user: 'TBrowse-165', output: '1571766200603')\\   at org.junit.Assert.fail(Assert.java:88)\\   at org.junit.Assert.failNotEquals(Assert.java:834)\\ at org.junit.Assert.assertEquals(Assert.java:645)\\  at com.xceptance.xlt.api.validators.HttpResponseCodeValidator.validate(HttpResponseCodeValidator.java:51)\\  at com.xceptance.xlt.api.validators.StandardValidator.validate(StandardValidator.java:28)\\  at com.xceptance.xlt.loadtest.validators.Validator.validateBasics(Validator.java:79)\\   at com.xceptance.xlt.loadtest.validators.Validator.validateCommonPage(Validator.java:40)\\   at com.xceptance.xlt.loadtest.validators.Validator.validateCategoryPage(Validator.java:276)\\    at com.xceptance.xlt.loadtest.actions.catalog.RefineByCategory.postValidate(RefineByCategory.java:86)\\  at com.xceptance.xlt.api.actions.AbstractAction.run(AbstractAction.java:383)\\   at com.xceptance.xlt.api.actions.AbstractWebAction.run(AbstractWebAction.java:136)\\ at com.xceptance.xlt.api.actions.AbstractHtmlPageAction.run(AbstractHtmlPageAction.java:124)\\   at com.xceptance.xlt.loadtest.actions.AbstractHtmlPageAction.runIfPossible(AbstractHtmlPageAction.java:297)\\    at com.xceptance.xlt.loadtest.flows.CategoryFlow.refineCategory(CategoryFlow.java:85)\\  at com.xceptance.xlt.loadtest.flows.CategoryFlow.run(CategoryFlow.java:43)\\ at com.xceptance.xlt.loadtest.tests.TBrowse.test(TBrowse.java:31)\\  at com.xceptance.xlt.loadtest.tests.AbstractTestCase.run(AbstractTestCase.java:59)\\ ...\",RefineByCategory",
+             "T", "TBrowse", "1571766200603", "12786", "true", 
+             "java.lang.AssertionError: Response code does not match expected:<200> but was:<410> (user: 'TBrowse-165', output: '1571766200603')\\   at org.junit.Assert.fail(Assert.java:88)\\   at org.junit.Assert.failNotEquals(Assert.java:834)\\ at org.junit.Assert.assertEquals(Assert.java:645)\\  at com.xceptance.xlt.api.validators.HttpResponseCodeValidator.validate(HttpResponseCodeValidator.java:51)\\  at com.xceptance.xlt.api.validators.StandardValidator.validate(StandardValidator.java:28)\\  at com.xceptance.xlt.loadtest.validators.Validator.validateBasics(Validator.java:79)\\   at com.xceptance.xlt.loadtest.validators.Validator.validateCommonPage(Validator.java:40)\\   at com.xceptance.xlt.loadtest.validators.Validator.validateCategoryPage(Validator.java:276)\\    at com.xceptance.xlt.loadtest.actions.catalog.RefineByCategory.postValidate(RefineByCategory.java:86)\\  at com.xceptance.xlt.api.actions.AbstractAction.run(AbstractAction.java:383)\\   at com.xceptance.xlt.api.actions.AbstractWebAction.run(AbstractWebAction.java:136)\\ at com.xceptance.xlt.api.actions.AbstractHtmlPageAction.run(AbstractHtmlPageAction.java:124)\\   at com.xceptance.xlt.loadtest.actions.AbstractHtmlPageAction.runIfPossible(AbstractHtmlPageAction.java:297)\\    at com.xceptance.xlt.loadtest.flows.CategoryFlow.refineCategory(CategoryFlow.java:85)\\  at com.xceptance.xlt.loadtest.flows.CategoryFlow.run(CategoryFlow.java:43)\\ at com.xceptance.xlt.loadtest.tests.TBrowse.test(TBrowse.java:31)\\  at com.xceptance.xlt.loadtest.tests.AbstractTestCase.run(AbstractTestCase.java:59)\\ ...", 
+             "RefineByCategory");
+    }
 }

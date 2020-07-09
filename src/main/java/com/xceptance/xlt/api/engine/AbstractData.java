@@ -3,6 +3,7 @@ package com.xceptance.xlt.api.engine;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.xceptance.common.lang.OpenStringBuilder;
 import com.xceptance.common.lang.ParseNumbers;
 import com.xceptance.common.util.CsvUtils;
 import com.xceptance.common.util.CsvUtilsDecode;
@@ -69,9 +70,9 @@ public abstract class AbstractData implements Data
      * {@inheritDoc}
      */
     @Override
-    public final void fromCSV(final String s)
+    public final void fromCSV(final OpenStringBuilder s)
     {
-        final List<XltCharBuffer> fields = CsvUtilsDecode.parse(s.toCharArray(), DELIMITER);
+        final List<XltCharBuffer> fields = CsvUtilsDecode.parse(s, DELIMITER);
         parseValues(fields);
     }
 

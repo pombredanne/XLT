@@ -1,6 +1,5 @@
 package com.xceptance.xlt.report;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -13,6 +12,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileType;
 
+import com.xceptance.common.io.MyBufferedReader;
+import com.xceptance.common.lang.OpenStringBuilder;
 import com.xceptance.common.util.SimpleArrayList;
 import com.xceptance.xlt.common.XltConstants;
 
@@ -180,38 +181,37 @@ class DataReaderThread implements Runnable
 
         final int chunkSize = dispatcher.chunkSize;
         
-        try (final BufferedReader reader = new BufferedReader(new InputStreamReader(file.getContent().getInputStream(),
-                                                                                    XltConstants.UTF8_ENCODING)))
         // VFS has not performance impact, hence this test code can stay here for later if needed, but might
         // not turn into a feature
-//        try (final BufferedReader reader = new BufferedReader(new FileReader(file.toString().replaceFirst("^file://", ""))))
+        // try (final BufferedReader reader = new BufferedReader(new FileReader(file.toString().replaceFirst("^file://", ""))))
+
+        try (final MyBufferedReader reader = new MyBufferedReader(new InputStreamReader(file.getContent().getInputStream(), XltConstants.UTF8_ENCODING)))
         {
-            List<String> lines = new SimpleArrayList<>(chunkSize + 10);
+            List<OpenStringBuilder> lines = new SimpleArrayList<>(chunkSize + 1);
             int baseLineNumber = 1;  // let line numbering start at 1
             int linesRead = 0;
 
             // read the file line-by-line
-            String line = reader.readLine();
-            while (line != null)
+            OpenStringBuilder line;
+            while ((line = reader.readLine()) != null)
             {
                 linesRead++;
-                lines.add(line.toString());
+                lines.add(line);
 
+                // have we filled the chunk?
                 if (linesRead == chunkSize)
                 {
                     // the chunk is full -> deliver it
                     buildAndSubmitLineChunk(lines, baseLineNumber, file, collectActionNames, adjustTimerName);
 
                     // start a new chunk
-                    lines = new SimpleArrayList<>(chunkSize + 10);
+                    lines = new SimpleArrayList<>(chunkSize + 1);
                     baseLineNumber += linesRead;
 
                     totalLineCounter.addAndGet(linesRead);
 
                     linesRead = 0;
                 }
-
-                line = reader.readLine();
             }
 
             // deliver any remaining lines
@@ -228,7 +228,7 @@ class DataReaderThread implements Runnable
         }
     }
 
-    private void buildAndSubmitLineChunk(final List<String> lines, final int baseLineNumber, final FileObject file,
+    private void buildAndSubmitLineChunk(final List<OpenStringBuilder> lines, final int baseLineNumber, final FileObject file,
                                          final boolean collectActionNames, final boolean adjustTimerName)
         throws InterruptedException
     {

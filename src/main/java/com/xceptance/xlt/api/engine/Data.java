@@ -1,5 +1,7 @@
 package com.xceptance.xlt.api.engine;
 
+import com.xceptance.common.lang.OpenStringBuilder;
+
 /**
  * <p>
  * The {@link Data} interface defines the minimum functionality any data record must implement to be recordable by the
@@ -37,9 +39,9 @@ public interface Data
      * Recreates the state of this object from a list of values separated by the DELIMITER constant.
      * 
      * @param s
-     *            the list of values
+     *            the char data to parse from
      */
-    public void fromCSV(final String s);
+    public void fromCSV(final OpenStringBuilder s);
 
     /**
      * Returns the name of the agent that produced this data record. Only used during report generation or analysis.

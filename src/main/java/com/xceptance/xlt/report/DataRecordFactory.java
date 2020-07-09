@@ -3,15 +3,8 @@ package com.xceptance.xlt.report;
 import java.lang.reflect.Constructor;
 import java.util.Map;
 
-import com.xceptance.xlt.agent.JvmResourceUsageData;
-import com.xceptance.xlt.api.engine.ActionData;
-import com.xceptance.xlt.api.engine.CustomData;
-import com.xceptance.xlt.api.engine.CustomValue;
+import com.xceptance.common.lang.OpenStringBuilder;
 import com.xceptance.xlt.api.engine.Data;
-import com.xceptance.xlt.api.engine.EventData;
-import com.xceptance.xlt.api.engine.PageLoadTimingData;
-import com.xceptance.xlt.api.engine.RequestData;
-import com.xceptance.xlt.api.engine.TransactionData;
 
 /**
  * Data classes hold processor for certain data types, such as Request, Transaction, Action, and
@@ -86,7 +79,7 @@ public class DataRecordFactory
      * @return
      * @throws Exception
      */
-    public Data createStatistics(final String s) throws Exception
+    public Data createStatistics(final OpenStringBuilder s) throws Exception
     {
         // create the statistics object
         final Constructor<? extends Data> c = ctrs[s.charAt(0)  - offset];

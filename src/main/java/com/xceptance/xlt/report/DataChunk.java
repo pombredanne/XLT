@@ -5,6 +5,8 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 import org.apache.commons.vfs2.FileObject;
 
+import com.xceptance.common.lang.OpenStringBuilder;
+
 /**
  * Holds a chunk of result lines together with meta and processing information. Both types of info is needed by the
  * parser threads.
@@ -35,13 +37,13 @@ public class DataChunk
 
     private final FileObject file;
 
-    private final List<String> lines;
+    private final List<OpenStringBuilder> lines;
 
     private final String testCaseName;
 
     private final String userNumber;
 
-    public DataChunk(final List<String> lines, final int baseLineNumber, final FileObject file, final String agentName,
+    public DataChunk(final List<OpenStringBuilder> lines, final int baseLineNumber, final FileObject file, final String agentName,
                      final String testCaseName, final String userNumber, final boolean collectActionNames, final boolean adjustTimerNames,
                      final ConcurrentSkipListMap<Long, String> actionNames)
     {
@@ -86,7 +88,7 @@ public class DataChunk
         return file;
     }
 
-    public List<String> getLines()
+    public List<OpenStringBuilder> getLines()
     {
         return lines;
     }
