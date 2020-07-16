@@ -74,15 +74,15 @@ public class DataRecordFactory
     }
 
     /**
-     * Return the 
-     * @param s
-     * @return
+     * Parse the the line into a suitable data record
+     * @param s the csv line to parse
+     * @return the parsed csv line as fitting data object
      * @throws Exception
      */
     public Data createStatistics(final OpenStringBuilder s) throws Exception
     {
         // create the statistics object
-        final Constructor<? extends Data> c = ctrs[s.charAt(0)  - offset];
+        final Constructor<? extends Data> c = ctrs[s.charAt(0) - offset];
         final Data data = c.newInstance();
 
         data.fromCSV(s);
