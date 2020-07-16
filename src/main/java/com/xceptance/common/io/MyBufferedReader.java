@@ -93,7 +93,7 @@ public class MyBufferedReader extends Reader {
     private boolean markedSkipLF = false;
 
     private static int defaultCharBufferSize = 8192;
-    private static int defaultExpectedLineLength = 80;
+    private static int defaultExpectedLineLength = 120;
 
     /**
      * Creates a buffering character-input stream that uses an input buffer of
@@ -354,7 +354,7 @@ public class MyBufferedReader extends Reader {
                 if (eol) {
                     if (s == null) {
 //                        str = new String(cb, startChar, i - startChar);
-                        int l = i - startChar;
+                        final int l = i - startChar;
                         s = new OpenStringBuilder(l);
                         s.append(cb, startChar, l);
                     } else {
@@ -556,7 +556,7 @@ public class MyBufferedReader extends Reader {
                     return true;
                 } else {
                     try {
-                        nextLine = readLine();
+                        nextLine = readLine().toString();
                         return (nextLine != null);
                     } catch (IOException e) {
                         throw new UncheckedIOException(e);
