@@ -14,6 +14,7 @@ import com.xceptance.common.util.SimpleArrayList;
 import com.xceptance.common.util.concurrent.DaemonThreadFactory;
 import com.xceptance.xlt.api.engine.Data;
 import com.xceptance.xlt.api.report.ReportProvider;
+import com.xceptance.xlt.report.DataParserThread.PostprocessedDataContainer;
 
 /**
  * Processes parsed data records. Processing means passing a data record to all configured report providers. Since data
@@ -90,21 +91,11 @@ class StatisticsProcessor
      * 
      * @param data a chunk of post processed data for final statitics gathering
      */
-    public void process(final SimpleArrayList<Data> data)
+    public void process(final PostprocessedDataContainer dataContainer)
     {
-        final List<Future<?>> tasks = new ArrayList<>(reportProviders.size());
+        final List<Future<?>> tasks = new ArrayList<>();
 
-        /**
-         * Capture the time stats independently because each provider
-         * runs a loop too and we only have to do it once
-         * 
-         * Ensures that we only run this once due to the use of the
-         * Threadly lib and the usage of this as sync key.
-         */
-        tasks.add(statisticsMaintenanceExecutor.submit(this, () -> 
-        {
-            maintainStatistics(data);
-        }));
+        final List<Data> data = dataContainer.getData();
 
         /**
          * Create a task for each report provider and the full data set
@@ -131,6 +122,9 @@ class StatisticsProcessor
             }));
         }
 
+        // get the max and min
+        maximumTime = Math.max(maximumTime, dataContainer.getMaximumTime());
+        minimumTime = Math.max(minimumTime, dataContainer.getMinimumTime());
         // ok, we have to wait till the last provider is fed
         for (int i = 0; i < tasks.size(); i++)
         {
@@ -151,29 +145,29 @@ class StatisticsProcessor
         }
     }
 
-    /**
-     * Maintain our statistics
-     *
-     * @param data
-     *            the data records
-     */
-    private void maintainStatistics(final List<Data> data)
-    {
-        long min = minimumTime;
-        long max = maximumTime;
-
-        // process the data
-        final int size = data.size();
-        for (int i = 0; i < size; i++)
-        {
-            // maintain statistics
-            final long time = data.get(i).getTime();
-
-            min = Math.min(min, time);
-            max = Math.max(max, time);
-        }
-
-        minimumTime = min;
-        maximumTime = max;
-    }
+//    /**
+//     * Maintain our statistics
+//     *
+//     * @param data
+//     *            the data records
+//     */
+//    private void maintainStatistics(final List<Data> data)
+//    {
+//        long min = minimumTime;
+//        long max = maximumTime;
+//
+//        // process the data
+//        final int size = data.size();
+//        for (int i = 0; i < size; i++)
+//        {
+//            // maintain statistics
+//            final long time = data.get(i).getTime();
+//
+//            min = Math.min(min, time);
+//            max = Math.max(max, time);
+//        }
+//
+//        minimumTime = min;
+//        maximumTime = max;
+//    }
 }

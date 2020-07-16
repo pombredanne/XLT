@@ -109,12 +109,12 @@ class DataParserThread implements Runnable
                 final boolean collectActionNames = lineChunk.getCollectActionNames();
                 final boolean adjustTimerName = lineChunk.getAdjustTimerNames();
                 final FileObject file = lineChunk.getFile();
-                
+
                 final long _fromTime = fromTime;
                 final long _toTime = toTime;
-                
+
                 // parse the chunk of lines and preprocess the results
-                final SimpleArrayList<Data> dataRecordChunk = new SimpleArrayList<>(lines.size());
+                final PostprocessedDataContainer postProcessedData = new PostprocessedDataContainer(lines.size());
 
                 int lineNumber = lineChunk.getBaseLineNumber();
 
@@ -134,12 +134,12 @@ class DataParserThread implements Runnable
                                 final RequestData result = postprocess((RequestData) data, requestProcessingRules, removeIndexes);
                                 if (result != null) 
                                 {
-                                    dataRecordChunk.add(result);
+                                    postProcessedData.add(result);
                                 }
                             }
                             else
                             {
-                                dataRecordChunk.add(data);
+                                postProcessedData.add(data);
                             }
                         }
                     }
@@ -148,7 +148,7 @@ class DataParserThread implements Runnable
                 }
 
                 // deliver the chunk of parsed data records
-                dispatcher.addPostprocessedData(dataRecordChunk);
+                dispatcher.addPostprocessedData(postProcessedData);
             }
             catch (final InterruptedException e)
             {
@@ -184,7 +184,7 @@ class DataParserThread implements Runnable
             return null;
         }
     }
-    
+
     private boolean filterByTime(final Data data, final long fromTime, final long toTime)
     {
         // skip the data record if it was not generated in the given time period
@@ -292,6 +292,60 @@ class DataParserThread implements Runnable
         }
 
         return requestData;
+    }
+
+    public static class PostprocessedDataContainer
+    {
+        final SimpleArrayList<Data> data;
+
+        /**
+         * Creation time of last data record.
+         */
+        private long maximumTime;
+
+        /**
+         * Creation time of first data record.
+         */
+        private long minimumTime;
+
+        PostprocessedDataContainer(final int size)
+        {
+            data = new SimpleArrayList<>(size);
+        }
+
+        public List<Data> getData()
+        {
+            return data;
+        }
+
+        public void add(Data d)
+        {
+            // maintain statistics
+            final long time = d.getTime();
+
+            minimumTime = Math.min(minimumTime, time);
+            maximumTime = Math.max(maximumTime, time);
+        }
+
+        /**
+         * Returns the maximum time.
+         *
+         * @return maximum time
+         */
+        public final long getMaximumTime()
+        {
+            return maximumTime;
+        }
+
+        /**
+         * Returns the minimum time.
+         *
+         * @return minimum time
+         */
+        public final long getMinimumTime()
+        {
+            return (minimumTime == Long.MAX_VALUE) ? 0 : minimumTime;
+        }
     }
 
 }

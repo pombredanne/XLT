@@ -6,9 +6,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.xceptance.common.util.SimpleArrayList;
 import com.xceptance.common.util.SynchronizingCounter;
-import com.xceptance.xlt.api.engine.Data;
+import com.xceptance.xlt.report.DataParserThread.PostprocessedDataContainer;
 
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
@@ -142,14 +141,14 @@ public class Dispatcher
     }
 
     /**
-     * Delivers a parsed chunk of data and puts it through the statisics processors
+     * Delivers a parsed chunk of data and puts it through the statistics processors
      *
      * @param dataRecordChunk
      *            the data record chunk
      */
-    public void addPostprocessedData(final SimpleArrayList<Data> records) throws InterruptedException
+    public void addPostprocessedData(final PostprocessedDataContainer postprocessedData) throws InterruptedException
     {
-        statisticsProcessor.process(records);
+        statisticsProcessor.process(postprocessedData);
         finishedProcessing();
     }
     
