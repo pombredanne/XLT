@@ -92,7 +92,7 @@ class StatisticsProcessor
      */
     public void process(final SimpleArrayList<Data> data)
     {
-        final List<Future<?>> tasks = new ArrayList<>();
+        final List<Future<?>> tasks = new ArrayList<>(reportProviders.size());
 
         /**
          * Capture the time stats independently because each provider
