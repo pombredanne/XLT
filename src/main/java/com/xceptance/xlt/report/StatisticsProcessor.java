@@ -1,10 +1,10 @@
 package com.xceptance.xlt.report;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -58,7 +58,9 @@ class StatisticsProcessor
      */
     public StatisticsProcessor(final List<ReportProvider> reportProviders, final int threadCount)
     {
-        this.reportProviders = reportProviders;
+        // filter the list and take only the provider that really need runtime parsed data
+        this.reportProviders = reportProviders.stream().filter(p -> p.wantsDataRecords()).collect(Collectors.toList());
+        
         statisticsMaintenanceExecutor = new KeyDistributedExecutor(Executors.newFixedThreadPool(threadCount, new DaemonThreadFactory(c -> "Providers-" + c)));
 
         maximumTime = 0;

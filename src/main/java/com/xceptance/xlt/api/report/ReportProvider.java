@@ -78,4 +78,15 @@ public interface ReportProvider extends ReportCreator
      *            the report provider configuration
      */
     public void setConfiguration(ReportProviderConfiguration config);
+    
+    /**
+     * Announce that we want to actually see data for processDataRecord because it might happen that
+     * we have some report providers which are using other data
+     * 
+     * @return true if it needs data false otherwise
+     */
+    public default boolean wantsDataRecords()
+    {
+        return true;
+    }
 }
