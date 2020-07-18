@@ -30,12 +30,12 @@ class StatisticsProcessor
     /**
      * Creation time of last data record.
      */
-    private long maximumTime;
+    private long maximumTime = 0;
 
     /**
      * Creation time of first data record.
      */
-    private long minimumTime;
+    private long minimumTime = Long.MAX_VALUE;
 
     /**
      * The configured report providers. An array for less overhead.
@@ -62,9 +62,6 @@ class StatisticsProcessor
         this.reportProviders = reportProviders.stream().filter(p -> p.wantsDataRecords()).collect(Collectors.toList());
         
         statisticsMaintenanceExecutor = new KeyDistributedExecutor(Executors.newFixedThreadPool(threadCount, new DaemonThreadFactory(c -> "Providers-" + c)));
-
-        maximumTime = 0;
-        minimumTime = Long.MAX_VALUE;
     }
 
     /**
@@ -95,7 +92,7 @@ class StatisticsProcessor
      */
     public void process(final PostprocessedDataContainer dataContainer)
     {
-        final List<Future<?>> tasks = new ArrayList<>();
+        final List<Future<?>> tasks = new SimpleArrayList<>(reportProviders.size());
 
         final List<Data> data = dataContainer.getData();
 
@@ -123,10 +120,11 @@ class StatisticsProcessor
                 }
             }));
         }
-
+        
         // get the max and min
+        minimumTime = Math.min(minimumTime, dataContainer.getMinimumTime());
         maximumTime = Math.max(maximumTime, dataContainer.getMaximumTime());
-        minimumTime = Math.max(minimumTime, dataContainer.getMinimumTime());
+        
         // ok, we have to wait till the last provider is fed
         for (int i = 0; i < tasks.size(); i++)
         {

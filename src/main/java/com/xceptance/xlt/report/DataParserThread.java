@@ -296,17 +296,18 @@ class DataParserThread implements Runnable
 
     public static class PostprocessedDataContainer
     {
-        final SimpleArrayList<Data> data;
+        private final SimpleArrayList<Data> data;
 
         /**
          * Creation time of last data record.
          */
-        private long maximumTime;
+        private long maximumTime = 0;
 
         /**
          * Creation time of first data record.
          */
-        private long minimumTime;
+        private long minimumTime = Long.MAX_VALUE;
+        
 
         PostprocessedDataContainer(final int size)
         {
@@ -318,13 +319,15 @@ class DataParserThread implements Runnable
             return data;
         }
 
-        public void add(Data d)
+        public void add(final Data d)
         {
             // maintain statistics
             final long time = d.getTime();
 
             minimumTime = Math.min(minimumTime, time);
             maximumTime = Math.max(maximumTime, time);
+            
+            data.add(d);
         }
 
         /**
