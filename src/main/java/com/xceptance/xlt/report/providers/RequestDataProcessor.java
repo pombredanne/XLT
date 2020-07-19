@@ -62,12 +62,12 @@ public class RequestDataProcessor extends BasicTimerDataProcessor
      * A set of hash codes generated from URL strings. Used to determine the number of distinct URLs used. Since storing
      * the URL strings can be memory-consuming, only their hash code is stored.
      */
-    private final TIntSet distinctUrlHashCodeSet = new TIntHashSet(127);
+    private final TIntSet distinctUrlHashCodeSet = new TIntHashSet(1271);
 
     /**
      * A set of distinct URLs. Contains at most {@link #MAXIMUM_NUMBER_OF_URLS} entries.
      */
-    private final Set<String> distinctUrlSet = new HashSet<String>(MAXIMUM_NUMBER_OF_URLS);
+    private final Set<String> distinctUrlSet = new HashSet<String>(2 * MAXIMUM_NUMBER_OF_URLS + 1);
 
     /**
      * The configured runtime segment boundaries. May be an empty array.
