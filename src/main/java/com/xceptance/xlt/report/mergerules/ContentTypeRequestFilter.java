@@ -37,6 +37,6 @@ public class ContentTypeRequestFilter extends AbstractPatternRequestFilter
     @Override
     protected String getText(final RequestData requestData)
     {
-        return requestData.getContentType();
+        return requestData.getContentType().toString();
     }
 }
