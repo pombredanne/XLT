@@ -103,7 +103,7 @@ public class ClientPerformanceMetrics
         }
         requestInfo.status += statusMessage;
 
-        requestInfo.mimeType = requestData.getContentType();
+        requestInfo.mimeType = requestData.getContentType().toString();
         requestInfo.name = getRequestName(requestData);
         requestInfo.requestMethod = request.getHttpMethod();
         requestInfo.responseCode = statusCode;
