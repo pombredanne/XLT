@@ -237,6 +237,12 @@ pegdown
   * Homepage: https://github.com/sirthias/pegdown
   * More information in folder: doc/3rd-party-licenses/pegdown
 
+pngj
+
+  * License: Apache License 2.0
+  * Homepage: https://github.com/alexdupre/pngj
+  * More information in folder: doc/3rd-party-licenses/pngj
+
 selenium-java
 
   * License: Apache License 2.0

@@ -9,8 +9,12 @@ import java.awt.RenderingHints;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.Rectangle2D.Double;
 import java.awt.image.BufferedImage;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -56,6 +60,7 @@ import com.xceptance.xlt.common.XltConstants;
 import com.xceptance.xlt.report.ReportGeneratorConfiguration.ChartCappingInfo;
 import com.xceptance.xlt.report.ReportGeneratorConfiguration.ChartCappingInfo.ChartCappingMode;
 import com.xceptance.xlt.report.ReportGeneratorConfiguration.ChartScale;
+import com.xceptance.xlt.report.util.pngj.PNGJWriter;
 
 /**
  * The JFreeChartUtils class simplifies generating charts via the JFreeChart library.
@@ -680,7 +685,8 @@ public final class JFreeChartUtils
     {
         final TimeSeries movingAverageSeries = includeMovingAverage ? createMovingAverageTimeSeries(series, percentage) : null;
 
-        return createLineChart(chartTitle, rangeAxisTitle, series, movingAverageSeries, startTime, endTime, showDots, ChartScale.LINEAR, -1);
+        return createLineChart(chartTitle, rangeAxisTitle, series, movingAverageSeries, startTime, endTime, showDots, ChartScale.LINEAR,
+                               -1);
     }
 
     /**
@@ -750,7 +756,7 @@ public final class JFreeChartUtils
 
         // response time axis
         final NumberAxis rangeAxis = chartScale == ChartScale.LOGARITHMIC ? new LogarithmicAxis(rangeAxisTitle)
-                                                                         : new NumberAxis(rangeAxisTitle);
+                                                                          : new NumberAxis(rangeAxisTitle);
         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 
         // response time plot
@@ -1134,7 +1140,7 @@ public final class JFreeChartUtils
      * @param chartHeight
      *            the chart height
      */
-    public static void saveChart(final JFreeChart chart, final File outputFile, final int chartWidth, final int chartHeight)
+    public static void saveChart(final JFreeChart chart, final File file, final int chartWidth, final int chartHeight)
     {
         // first of all apply the XLT chart theme to the chart
         DEFAULT_CHART_THEME.apply(chart);
@@ -1159,372 +1165,375 @@ public final class JFreeChartUtils
             g2d.dispose();
 
             // save image
-            final PngEncoder encoder = new PngEncoder(bufferedImage, true, 0, pngCompressionLevel);
-            final byte[] imageData = encoder.pngEncode();
-            org.apache.commons.io.FileUtils.writeByteArrayToFile(outputFile, imageData);
+            try (final OutputStream os = new BufferedOutputStream(org.apache.commons.io.FileUtils.openOutputStream(file, false)))
+            {
+                PNGJWriter writer = PNGJWriter.createInstance(bufferedImage, os);
+                writer.setCompLevel(6);
+                writer.writeAll();
+            }
         }
         catch (final IOException e)
         {
-            log.error("Failed to save chart to file: " + outputFile, e);
+            log.error("Failed to save chart to file: " + file, e);
         }
-    }
+    } 
 
-    /**
-     * Saves the given chart in the PNG format to a file with the passed name in the specified directory.
-     *
-     * @param chart
-     *            the chart
-     * @param name
-     *            the file name (excluding the .png extension)
-     * @param outputDir
-     *            the target directory
-     * @param chartWidth
-     *            the chart width
-     * @param chartHeight
-     *            the chart height
-     */
-    public static void saveChart(final JFreeChart chart, final String name, final File outputDir, final int chartWidth,
-                                 final int chartHeight)
+/**
+ * Saves the given chart in the PNG format to a file with the passed name in the specified directory.
+ *
+ * @param chart
+ *            the chart
+ * @param name
+ *            the file name (excluding the .png extension)
+ * @param outputDir
+ *            the target directory
+ * @param chartWidth
+ *            the chart width
+ * @param chartHeight
+ *            the chart height
+ */
+public static void saveChart(final JFreeChart chart, final String name, final File outputDir, final int chartWidth,
+                             final int chartHeight)
+{
+    final File outputFile = new File(outputDir, FileUtils.convertIllegalCharsInFileName(name) + ".png");
+
+    saveChart(chart, outputFile, chartWidth, chartHeight);
+}
+
+/**
+ * Adds the given time series collection and axis title to the given chart.
+ *
+ * @param chart
+ *            the chart to modify
+ * @param rangeAxisTitle
+ *            the name of the y-axis
+ * @param seriesCollection
+ *            the time series collection to show
+ */
+public static void setAxisTimeSeriesCollection(final JFreeChart chart, final int axisIndex, final String rangeAxisTitle,
+                                               final List<TimeSeriesConfiguration> seriesConfigurations)
+{
+    final XYPlot plot = (XYPlot) chart.getPlot();
+    final int dsCount = plot.getDatasetCount();
+
+    // initialize renderer and series collection
+    final XYItemRenderer renderer = createLineRenderer((ColorSet) null);
+    final TimeSeriesCollection seriesCollection = new TimeSeriesCollection();
+
+    // setup renderer and build series collection
+    for (int index = 0; index < seriesConfigurations.size(); index++)
     {
-        final File outputFile = new File(outputDir, FileUtils.convertIllegalCharsInFileName(name) + ".png");
+        final TimeSeriesConfiguration seriesConfig = seriesConfigurations.get(index);
 
-        saveChart(chart, outputFile, chartWidth, chartHeight);
-    }
+        // add series to collection
+        seriesCollection.addSeries(seriesConfig.getTimeSeries());
 
-    /**
-     * Adds the given time series collection and axis title to the given chart.
-     *
-     * @param chart
-     *            the chart to modify
-     * @param rangeAxisTitle
-     *            the name of the y-axis
-     * @param seriesCollection
-     *            the time series collection to show
-     */
-    public static void setAxisTimeSeriesCollection(final JFreeChart chart, final int axisIndex, final String rangeAxisTitle,
-                                                   final List<TimeSeriesConfiguration> seriesConfigurations)
-    {
-        final XYPlot plot = (XYPlot) chart.getPlot();
-        final int dsCount = plot.getDatasetCount();
-
-        // initialize renderer and series collection
-        final XYItemRenderer renderer = createLineRenderer((ColorSet) null);
-        final TimeSeriesCollection seriesCollection = new TimeSeriesCollection();
-
-        // setup renderer and build series collection
-        for (int index = 0; index < seriesConfigurations.size(); index++)
+        // update renderer (line style)
+        final TimeSeriesConfiguration.Style style = seriesConfig.getStyle();
+        if (style != TimeSeriesConfiguration.Style.LINE)
         {
-            final TimeSeriesConfiguration seriesConfig = seriesConfigurations.get(index);
-
-            // add series to collection
-            seriesCollection.addSeries(seriesConfig.getTimeSeries());
-
-            // update renderer (line style)
-            final TimeSeriesConfiguration.Style style = seriesConfig.getStyle();
-            if (style != TimeSeriesConfiguration.Style.LINE)
-            {
-                final float lineWidth = 0.5f;
-                final float dash[] =
-                    {
-                        5.0f
-                    };
-                final float dot[] =
-                    {
-                        lineWidth
-                    };
-
-                BasicStroke stroke;
-                switch (style)
+            final float lineWidth = 0.5f;
+            final float dash[] =
                 {
-                    case DASH:
+                    5.0f
+                };
+            final float dot[] =
+                {
+                    lineWidth
+                };
+
+            BasicStroke stroke;
+            switch (style)
+            {
+                case DASH:
                     {
                         stroke = new BasicStroke(lineWidth, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f);
                         break;
                     }
-                    case DOT:
+                case DOT:
                     {
                         stroke = new BasicStroke(lineWidth, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 2.0f, dot, 0.0f);
                         break;
                     }
-                    default:
+                default:
                     {
                         log.warn("unknown line style '" + style + "'. Use LINE style by default.");
                         stroke = new BasicStroke(lineWidth);
                     }
-                }
-                renderer.setSeriesStroke(index, stroke);
             }
-
-            // define color
-            final ColorSet colorSet = axisIndex < 1 ? ColorSet.A : ColorSet.B;
-            final Color color = seriesConfig.getColor() != null ? seriesConfig.getColor() : colorSet.get((index + colorSet.size()) %
-                                                                                                         colorSet.size());
-
-            // update renderer (color)
-            renderer.setSeriesPaint(index, color);
+            renderer.setSeriesStroke(index, stroke);
         }
 
-        // set y-Axis
-        final NumberAxis yAxis = createNumberAxis(rangeAxisTitle != null ? rangeAxisTitle : DEFAULT_VALUE_AXIS_TITLE);
+        // define color
+        final ColorSet colorSet = axisIndex < 1 ? ColorSet.A : ColorSet.B;
+        final Color color = seriesConfig.getColor() != null ? seriesConfig.getColor()
+                                                            : colorSet.get((index + colorSet.size()) % colorSet.size());
 
-        // update plot
-        plot.setDataset(dsCount, seriesCollection);
-        plot.setRangeAxis(axisIndex == 1 ? 1 : 0, yAxis);
-        plot.mapDatasetToRangeAxis(dsCount, axisIndex == 1 ? 1 : 0);
-        plot.setRenderer(dsCount, renderer);
+        // update renderer (color)
+        renderer.setSeriesPaint(index, color);
     }
 
-    /**
-     * Creates a new time series with the given name from the passed min-max value set. The data items in the time
-     * series will be {@link DoubleMinMaxTimeSeriesDataItem} objects, so the minimum/maximum/count/accumulated value
-     * properties of a {@link DoubleMinMaxValue} will still be available.
-     *
-     * @param minMaxValueSet
-     *            the source min-max value set
-     * @param timeSeriesName
-     *            the name of the time series
-     * @return the time series
-     */
-    public static TimeSeries toMinMaxTimeSeries(final DoubleMinMaxValueSet valueSet, final String timeSeriesName)
+    // set y-Axis
+    final NumberAxis yAxis = createNumberAxis(rangeAxisTitle != null ? rangeAxisTitle : DEFAULT_VALUE_AXIS_TITLE);
+
+    // update plot
+    plot.setDataset(dsCount, seriesCollection);
+    plot.setRangeAxis(axisIndex == 1 ? 1 : 0, yAxis);
+    plot.mapDatasetToRangeAxis(dsCount, axisIndex == 1 ? 1 : 0);
+    plot.setRenderer(dsCount, renderer);
+}
+
+/**
+ * Creates a new time series with the given name from the passed min-max value set. The data items in the time
+ * series will be {@link DoubleMinMaxTimeSeriesDataItem} objects, so the minimum/maximum/count/accumulated value
+ * properties of a {@link DoubleMinMaxValue} will still be available.
+ *
+ * @param minMaxValueSet
+ *            the source min-max value set
+ * @param timeSeriesName
+ *            the name of the time series
+ * @return the time series
+ */
+public static TimeSeries toMinMaxTimeSeries(final DoubleMinMaxValueSet valueSet, final String timeSeriesName)
+{
+    final TimeSeries timeSeries = new TimeSeries(timeSeriesName);
+
+    if (valueSet.getValueCount() > 0)
     {
-        final TimeSeries timeSeries = new TimeSeries(timeSeriesName);
+        final DoubleMinMaxValue[] values = valueSet.getValues();
+        long time = valueSet.getMinimumTime();
+        final int timeIncrement = valueSet.getScale() * 1000;
 
-        if (valueSet.getValueCount() > 0)
+        for (int i = 0; i < values.length; i++)
         {
-            final DoubleMinMaxValue[] values = valueSet.getValues();
-            long time = valueSet.getMinimumTime();
-            final int timeIncrement = valueSet.getScale() * 1000;
-
-            for (int i = 0; i < values.length; i++)
+            final DoubleMinMaxValue value = values[i];
+            if (value != null)
             {
-                final DoubleMinMaxValue value = values[i];
-                if (value != null)
-                {
-                    final Second second = getSecond(time);
-                    timeSeries.add(new DoubleMinMaxTimeSeriesDataItem(second, value));
-                }
-
-                time += timeIncrement;
+                final Second second = getSecond(time);
+                timeSeries.add(new DoubleMinMaxTimeSeriesDataItem(second, value));
             }
-        }
 
-        return timeSeries;
+            time += timeIncrement;
+        }
     }
 
-    /**
-     * Creates a new time series with the given name from the passed min-max value set. The data items in the time
-     * series will be {@link MinMaxTimeSeriesDataItem} objects, so the minimum/maximum/count/accumulated value
-     * properties of a {@link IntMinMaxValue} will still be available.
-     *
-     * @param minMaxValueSet
-     *            the source min-max value set
-     * @param timeSeriesName
-     *            the name of the time series
-     * @return the time series
-     */
-    public static TimeSeries toMinMaxTimeSeries(final IntMinMaxValueSet minMaxValueSet, final String timeSeriesName)
+    return timeSeries;
+}
+
+/**
+ * Creates a new time series with the given name from the passed min-max value set. The data items in the time
+ * series will be {@link MinMaxTimeSeriesDataItem} objects, so the minimum/maximum/count/accumulated value
+ * properties of a {@link IntMinMaxValue} will still be available.
+ *
+ * @param minMaxValueSet
+ *            the source min-max value set
+ * @param timeSeriesName
+ *            the name of the time series
+ * @return the time series
+ */
+public static TimeSeries toMinMaxTimeSeries(final IntMinMaxValueSet minMaxValueSet, final String timeSeriesName)
+{
+    final TimeSeries timeSeries = new TimeSeries(timeSeriesName);
+
+    if (minMaxValueSet.getValueCount() > 0)
     {
-        final TimeSeries timeSeries = new TimeSeries(timeSeriesName);
+        final IntMinMaxValue[] values = minMaxValueSet.getValues();
+        long time = minMaxValueSet.getMinimumTime();
+        final int scale = minMaxValueSet.getScale();
 
-        if (minMaxValueSet.getValueCount() > 0)
+        for (int i = 0; i < values.length; i++)
         {
-            final IntMinMaxValue[] values = minMaxValueSet.getValues();
-            long time = minMaxValueSet.getMinimumTime();
-            final int scale = minMaxValueSet.getScale();
+            final IntMinMaxValue value = values[i];
 
-            for (int i = 0; i < values.length; i++)
+            if (value != null)
             {
-                final IntMinMaxValue value = values[i];
+                final Second second = getSecond(time);
 
-                if (value != null)
-                {
-                    final Second second = getSecond(time);
-
-                    timeSeries.add(new MinMaxTimeSeriesDataItem(second, value));
-                }
-
-                time = time + scale * 1000;
+                timeSeries.add(new MinMaxTimeSeriesDataItem(second, value));
             }
-        }
 
-        return timeSeries;
+            time = time + scale * 1000;
+        }
     }
 
-    /**
-     * Creates a new time series with the given name from the passed min-max value set. The data items in the time
-     * series will get the maximum value from the corresponding value in the value set. This is especially useful for
-     * bar charts.
-     *
-     * @param minMaxValueSet
-     *            the source min-max value set
-     * @param timeSeriesName
-     *            the name of the time series
-     * @return the time series
-     */
-    public static TimeSeries toStandardTimeSeries(final IntMinMaxValueSet minMaxValueSet, final String timeSeriesName)
+    return timeSeries;
+}
+
+/**
+ * Creates a new time series with the given name from the passed min-max value set. The data items in the time
+ * series will get the maximum value from the corresponding value in the value set. This is especially useful for
+ * bar charts.
+ *
+ * @param minMaxValueSet
+ *            the source min-max value set
+ * @param timeSeriesName
+ *            the name of the time series
+ * @return the time series
+ */
+public static TimeSeries toStandardTimeSeries(final IntMinMaxValueSet minMaxValueSet, final String timeSeriesName)
+{
+    final TimeSeries timeSeries = new TimeSeries(timeSeriesName);
+
+    if (minMaxValueSet.getValueCount() > 0)
     {
-        final TimeSeries timeSeries = new TimeSeries(timeSeriesName);
+        final IntMinMaxValue[] values = minMaxValueSet.getValues();
+        long time = minMaxValueSet.getMinimumTime();
+        final int scale = minMaxValueSet.getScale();
 
-        if (minMaxValueSet.getValueCount() > 0)
+        for (int i = 0; i < values.length; i++)
         {
-            final IntMinMaxValue[] values = minMaxValueSet.getValues();
-            long time = minMaxValueSet.getMinimumTime();
-            final int scale = minMaxValueSet.getScale();
+            final IntMinMaxValue value = values[i];
 
-            for (int i = 0; i < values.length; i++)
+            if (value != null)
             {
-                final IntMinMaxValue value = values[i];
+                final Second second = getSecond(time);
 
-                if (value != null)
-                {
-                    final Second second = getSecond(time);
-
-                    timeSeries.add(second, value.getMaximumValue());
-                }
-
-                time = time + scale * 1000;
+                timeSeries.add(second, value.getMaximumValue());
             }
-        }
 
-        return timeSeries;
+            time = time + scale * 1000;
+        }
     }
 
-    /**
-     * Creates a time series with rate values calculated from the given count/total count values sets. This method
-     * assumes that the count value set is always a sub set of the total count value set.
-     *
-     * @param countValueSet
-     *            the count values
-     * @param totalCountValueSet
-     *            the total count values
-     * @param minMaxValueSetSize
-     *            the size to use for min-max value sets
-     * @return the rate time series
-     */
-    public static TimeSeries calculateRateTimeSeries(final ValueSet countValueSet, final ValueSet totalCountValueSet,
-                                                     final int minMaxValueSetSize, final String seriesName)
+    return timeSeries;
+}
+
+/**
+ * Creates a time series with rate values calculated from the given count/total count values sets. This method
+ * assumes that the count value set is always a sub set of the total count value set.
+ *
+ * @param countValueSet
+ *            the count values
+ * @param totalCountValueSet
+ *            the total count values
+ * @param minMaxValueSetSize
+ *            the size to use for min-max value sets
+ * @return the rate time series
+ */
+public static TimeSeries calculateRateTimeSeries(final ValueSet countValueSet, final ValueSet totalCountValueSet,
+                                                 final int minMaxValueSetSize, final String seriesName)
+{
+    final TimeSeries rateTimeSeries = new TimeSeries(seriesName);
+
+    // leave early if there are no total count values
+    if (totalCountValueSet.getValueCount() == 0)
     {
-        final TimeSeries rateTimeSeries = new TimeSeries(seriesName);
-
-        // leave early if there are no total count values
-        if (totalCountValueSet.getValueCount() == 0)
-        {
-            return rateTimeSeries;
-        }
-
-        // make the count value set the same size as the total count set by simply adding 0 values
-        countValueSet.addOrUpdateValue(totalCountValueSet.getMinimumTime(), 0);
-        countValueSet.addOrUpdateValue(totalCountValueSet.getMaximumTime(), 0);
-
-        // get start time (values are equal for both input value sets)
-        long time = totalCountValueSet.getMinimumTime();
-
-        // calculate the rate time series
-        final int[] counts = countValueSet.getValues();
-        final int[] totalCounts = totalCountValueSet.getValues();
-
-        for (int i = 0; i < counts.length; i++)
-        {
-            // create rate values only when there have been finished transactions
-            if (totalCounts[i] > 0)
-            {
-                final double rate = 100.0 * counts[i] / totalCounts[i];
-                rateTimeSeries.add(getSecond(time), rate);
-            }
-
-            time = time + 1000;
-        }
-
         return rateTimeSeries;
     }
 
-    /**
-     * Fixes the given time series such that negative or 0 values are replaced with a very small positive number so the
-     * time series can be used together with logarithmic axes.
-     *
-     * @param timeSeries
-     *            the time series
-     */
-    public static void adjustSeriesForLogarithmicAxes(final TimeSeries timeSeries)
-    {
-        for (int i = 0; i < timeSeries.getItemCount(); i++)
-        {
-            final TimeSeriesDataItem dataItem = timeSeries.getDataItem(i);
+    // make the count value set the same size as the total count set by simply adding 0 values
+    countValueSet.addOrUpdateValue(totalCountValueSet.getMinimumTime(), 0);
+    countValueSet.addOrUpdateValue(totalCountValueSet.getMaximumTime(), 0);
 
-            if ((double) dataItem.getValue() <= 0)
-            {
-                dataItem.setValue(MIN_VALUE_FOR_LOGARITHMIC_AXES);
-            }
+    // get start time (values are equal for both input value sets)
+    long time = totalCountValueSet.getMinimumTime();
+
+    // calculate the rate time series
+    final int[] counts = countValueSet.getValues();
+    final int[] totalCounts = totalCountValueSet.getValues();
+
+    for (int i = 0; i < counts.length; i++)
+    {
+        // create rate values only when there have been finished transactions
+        if (totalCounts[i] > 0)
+        {
+            final double rate = 100.0 * counts[i] / totalCounts[i];
+            rateTimeSeries.add(getSecond(time), rate);
+        }
+
+        time = time + 1000;
+    }
+
+    return rateTimeSeries;
+}
+
+/**
+ * Fixes the given time series such that negative or 0 values are replaced with a very small positive number so the
+ * time series can be used together with logarithmic axes.
+ *
+ * @param timeSeries
+ *            the time series
+ */
+public static void adjustSeriesForLogarithmicAxes(final TimeSeries timeSeries)
+{
+    for (int i = 0; i < timeSeries.getItemCount(); i++)
+    {
+        final TimeSeriesDataItem dataItem = timeSeries.getDataItem(i);
+
+        if ((double) dataItem.getValue() <= 0)
+        {
+            dataItem.setValue(MIN_VALUE_FOR_LOGARITHMIC_AXES);
         }
     }
+}
 
-    /**
-     * Fixes the given interval series such that negative or 0 values are replaced with a very small positive number so
-     * the interval series can be used together with logarithmic axes.
-     *
-     * @param intervalSeries
-     *            the interval series
-     */
-    public static void adjustSeriesForLogarithmicAxes(final XYIntervalSeries intervalSeries)
+/**
+ * Fixes the given interval series such that negative or 0 values are replaced with a very small positive number so
+ * the interval series can be used together with logarithmic axes.
+ *
+ * @param intervalSeries
+ *            the interval series
+ */
+public static void adjustSeriesForLogarithmicAxes(final XYIntervalSeries intervalSeries)
+{
+    for (int i = 0; i < intervalSeries.getItemCount(); i++)
     {
-        for (int i = 0; i < intervalSeries.getItemCount(); i++)
+        final XYIntervalDataItem dataItem = (XYIntervalDataItem) intervalSeries.getDataItem(i);
+
+        final java.lang.Double x = dataItem.getX();
+        double yLow = dataItem.getYLowValue();
+        double y = dataItem.getYLowValue();
+        double yHigh = dataItem.getYLowValue();
+
+        // check if the data item has to be adjusted
+        if (yLow <= 0 || y <= 0 || yHigh <= 0)
         {
-            final XYIntervalDataItem dataItem = (XYIntervalDataItem) intervalSeries.getDataItem(i);
+            // remove the old data item
+            intervalSeries.remove(x);
 
-            final java.lang.Double x = dataItem.getX();
-            double yLow = dataItem.getYLowValue();
-            double y = dataItem.getYLowValue();
-            double yHigh = dataItem.getYLowValue();
+            // limit the y values
+            yLow = (yLow <= 0) ? MIN_VALUE_FOR_LOGARITHMIC_AXES : yLow;
+            y = (y <= 0) ? MIN_VALUE_FOR_LOGARITHMIC_AXES : y;
+            yHigh = (yHigh <= 0) ? MIN_VALUE_FOR_LOGARITHMIC_AXES : yHigh;
 
-            // check if the data item has to be adjusted
-            if (yLow <= 0 || y <= 0 || yHigh <= 0)
-            {
-                // remove the old data item
-                intervalSeries.remove(x);
-
-                // limit the y values
-                yLow = (yLow <= 0) ? MIN_VALUE_FOR_LOGARITHMIC_AXES : yLow;
-                y = (y <= 0) ? MIN_VALUE_FOR_LOGARITHMIC_AXES : y;
-                yHigh = (yHigh <= 0) ? MIN_VALUE_FOR_LOGARITHMIC_AXES : yHigh;
-
-                // add a new data item
-                intervalSeries.add(x, dataItem.getXLowValue(), dataItem.getXHighValue(), y, yLow, yHigh);
-            }
+            // add a new data item
+            intervalSeries.add(x, dataItem.getXLowValue(), dataItem.getXHighValue(), y, yLow, yHigh);
         }
     }
+}
 
-    /**
-     * Sets the compression level to use when creating PNG images.
-     *
-     * @param level
-     *            the compression level
-     */
-    public static void setPngCompressionLevel(final int level)
+/**
+ * Sets the compression level to use when creating PNG images.
+ *
+ * @param level
+ *            the compression level
+ */
+public static void setPngCompressionLevel(final int level)
+{
+    if (0 <= level && level <= 9)
     {
-        if (0 <= level && level <= 9)
-        {
-            pngCompressionLevel = level;
-        }
-        else
-        {
-            throw new IllegalArgumentException("The PNG compression level must be between 0...9");
-        }
+        pngCompressionLevel = level;
     }
+    else
+    {
+        throw new IllegalArgumentException("The PNG compression level must be between 0...9");
+    }
+}
 
-    /**
-     * Returns the compression level to use when creating PNG images.
-     *
-     * @return the compression level
-     */
-    public static int getPngCompressionLevel()
-    {
-        return pngCompressionLevel;
-    }
+/**
+ * Returns the compression level to use when creating PNG images.
+ *
+ * @return the compression level
+ */
+public static int getPngCompressionLevel()
+{
+    return pngCompressionLevel;
+}
 
-    /**
-     * Private constructor to avoid object instantiation.
-     */
-    private JFreeChartUtils()
-    {
-    }
+/**
+ * Private constructor to avoid object instantiation.
+ */
+private JFreeChartUtils()
+{
+}
 }
