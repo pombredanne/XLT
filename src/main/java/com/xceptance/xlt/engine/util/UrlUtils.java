@@ -221,7 +221,7 @@ public final class UrlUtils
      * @param url the url to retrieve the host name from
      * @return the host name in the url or the full url if not host name can be identified
      */
-    public static FastString retrieveHostFromUrl(final String url)
+    public static String retrieveHostFromUrl(final String url)
     {
         // strip protocol
         int start = url.indexOf("://");
@@ -229,8 +229,6 @@ public final class UrlUtils
 
         // strip path/query/fragment if present (whatever comes first)
         final int length = url.length();
-        int hashCode = 0;
-        
         for (int i = start; i < length; i++)
         {
             final char c = url.charAt(i);
@@ -239,24 +237,20 @@ public final class UrlUtils
             // not relevant chars first
             if (c <= MAX_CHAR && (c == '/' || c == '?' || c == '#'))
             {
-                final String s = url.substring(start, i);
-                return new FastString(s, hashCode);
+                return url.substring(start, i);
             }
-
-            hashCode = 31 * hashCode + c;
         }
         
         // no end, check if we got a start
         if (start == 0)
         {
             // no start, use the original
-            return new FastString(url, url.hashCode());
+            return url;
         }
         else
         {
             // at least we had a start
-            final String s = url.substring(start);
-            return new FastString(s, s.hashCode());
+            return url.substring(start);
         }
     }
 }

@@ -7,7 +7,6 @@ import org.apache.commons.lang3.StringUtils;
 import com.xceptance.common.lang.ParseNumbers;
 import com.xceptance.common.lang.StringHasher;
 import com.xceptance.common.util.XltCharBuffer;
-import com.xceptance.xlt.engine.util.FastString;
 import com.xceptance.xlt.engine.util.UrlUtils;
 
 /**
@@ -44,7 +43,10 @@ public class RequestData extends TimerData
     /**
      * The value to show if the host could not be determined from a URL.
      */
-    public static FastString UNKNOWN_HOST = new FastString("(unknown)", "(unknown)".hashCode());
+    public static final String UNKNOWN_HOST = "(unknown)";
+    {
+        UNKNOWN_HOST.hashCode(); // for caching the hashcode
+    }
     
     /**
      * The size of the response message in bytes.
@@ -64,7 +66,7 @@ public class RequestData extends TimerData
     /**
      * The content type of the response.
      */
-    private FastString contentType;
+    private String contentType;
 
     /**
      * The time it took to receive the response from the server.
@@ -124,7 +126,7 @@ public class RequestData extends TimerData
     /**
      * The host, parsed from the url early in the process
      */
-    private FastString host;
+    private String host;
     
     /**
      * The HTTP-Method of this request.
@@ -202,7 +204,7 @@ public class RequestData extends TimerData
      * 
      * @return the content type
      */
-    public FastString getContentType()
+    public String getContentType()
     {
         return contentType;
     }
@@ -325,7 +327,7 @@ public class RequestData extends TimerData
      * 
      * @return the host from the url
      */
-    public FastString getHost()
+    public String getHost()
     {
         return host;
     }
@@ -435,7 +437,7 @@ public class RequestData extends TimerData
      */
     public void setContentType(final String contentType)
     {
-        this.contentType = new FastString(contentType);
+        this.contentType = contentType;
     }
 
     /**
@@ -572,15 +574,15 @@ public class RequestData extends TimerData
         this.hashCodeOfUrlWithoutFragment = StringHasher.hashCodeWithLimit(url, '#');
 
         final String _url = url.toString();
-        final FastString hostName = UrlUtils.retrieveHostFromUrl(_url);
-        
-        if (hostName.toString().length() == 0)
+        final String hostName = UrlUtils.retrieveHostFromUrl(_url);
+        if (hostName == null || hostName.length() == 0)
         {
             host = UNKNOWN_HOST;
         }
         else
         {   
             host = hostName;
+            host.hashCode();
         }
         
         this.url = _url;
@@ -653,7 +655,7 @@ public class RequestData extends TimerData
         fields.add(Integer.toString(bytesReceived));
         fields.add(Integer.toString(responseCode));
         fields.add(StringUtils.defaultString(url));
-        fields.add(StringUtils.defaultString(contentType.toString()));
+        fields.add(StringUtils.defaultString(contentType));
         fields.add(String.valueOf(connectTime));
         fields.add(String.valueOf(sendTime));
         fields.add(String.valueOf(serverBusyTime));
@@ -698,7 +700,8 @@ public class RequestData extends TimerData
         if (values.size() > 22)
         {
             setUrl(values.get(8));
-            contentType = new FastString(values.get(9).toString());
+            contentType = values.get(9).toString();
+            contentType.hashCode(); // do that when the cache is hot
 
             setConnectTime(ParseNumbers.parseInt(values.get(10)));
             setSendTime(ParseNumbers.parseInt(values.get(11)));
@@ -738,7 +741,7 @@ public class RequestData extends TimerData
 
         if (length > 9)
         {
-            contentType = new FastString(values.get(9).toString());
+            contentType = values.get(9).toString();
         }
 
         if (length > 10)
