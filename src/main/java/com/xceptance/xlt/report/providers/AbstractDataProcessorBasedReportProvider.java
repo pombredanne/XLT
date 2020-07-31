@@ -3,10 +3,10 @@ package com.xceptance.xlt.report.providers;
 import java.lang.reflect.Constructor;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.xceptance.common.collection.FastHashMap;
 import com.xceptance.xlt.api.engine.Data;
 import com.xceptance.xlt.api.report.AbstractReportProvider;
 
@@ -24,7 +24,7 @@ public abstract class AbstractDataProcessorBasedReportProvider<T extends Abstrac
     /**
      * A mapping from timer names to data processor instances.
      */
-    private final Map<String, T> processors = new HashMap<String, T>();
+    private final FastHashMap<String, T> processors = new FastHashMap<String, T>(21, 0.3f);
 
     /**
      * Creates a new {@link AbstractDataProcessorBasedReportProvider} instance.
@@ -85,7 +85,13 @@ public abstract class AbstractDataProcessorBasedReportProvider<T extends Abstrac
      */
     protected Collection<T> getProcessors()
     {
+        Map<String, T> sortedMap = new TreeMap<String, T>();
+        for (final String key : processors.keys())
+        {
+            final T value = processors.get(key);
+            sortedMap.put(key, value);
+        }
         // return the processors sorted by timer name
-        return Collections.unmodifiableCollection(new TreeMap<String, T>(processors).values());
+        return Collections.unmodifiableCollection(sortedMap.values());
     }
 }

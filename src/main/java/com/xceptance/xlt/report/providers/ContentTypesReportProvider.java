@@ -1,11 +1,8 @@
 package com.xceptance.xlt.report.providers;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
-
+import com.xceptance.common.collection.FastHashMap;
 import com.xceptance.xlt.api.engine.Data;
 import com.xceptance.xlt.api.engine.RequestData;
 import com.xceptance.xlt.api.report.AbstractReportProvider;
@@ -18,7 +15,7 @@ public class ContentTypesReportProvider extends AbstractReportProvider
     /**
      * A mapping from content types to their corresponding {@link ContentTypeReport} objects.
      */
-    private final Map<String, ContentTypeReport> contentTypeReports = new HashMap<String, ContentTypeReport>();
+    private final FastHashMap<String, ContentTypeReport> contentTypeReports = new FastHashMap<>(3, 0.3f);
 
     /**
      * {@inheritDoc}
@@ -56,7 +53,7 @@ public class ContentTypesReportProvider extends AbstractReportProvider
             if (contentTypeReport == null)
             {
                 contentTypeReport = new ContentTypeReport();
-                contentTypeReport.contentType = contentType;
+                contentTypeReport.contentType = contentType.toString();
 
                 contentTypeReports.put(contentType, contentTypeReport);
             }
