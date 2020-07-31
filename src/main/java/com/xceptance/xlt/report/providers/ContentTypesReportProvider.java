@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.math3.transform.FastHadamardTransformer;
+
+import com.xceptance.common.collection.FastHashMap;
 import com.xceptance.xlt.api.engine.Data;
 import com.xceptance.xlt.api.engine.RequestData;
 import com.xceptance.xlt.api.report.AbstractReportProvider;
@@ -17,7 +20,7 @@ public class ContentTypesReportProvider extends AbstractReportProvider
     /**
      * A mapping from content types to their corresponding {@link ContentTypeReport} objects.
      */
-    private final Map<FastString, ContentTypeReport> contentTypeReports = new HashMap<>(11);
+    private final FastHashMap<FastString, ContentTypeReport> contentTypeReports = new FastHashMap<>(3, 0.3f);
 
     /**
      * {@inheritDoc}
