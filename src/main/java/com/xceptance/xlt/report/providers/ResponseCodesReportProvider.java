@@ -1,8 +1,7 @@
 package com.xceptance.xlt.report.providers;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import org.apache.http.impl.EnglishReasonPhraseCatalog;
 
@@ -18,7 +17,7 @@ public class ResponseCodesReportProvider extends AbstractReportProvider
     /**
      * A mapping from response codes to their corresponding {@link ResponseCodeReport} objects.
      */
-    private final Map<Integer, ResponseCodeReport> responseCodeReports = new HashMap<Integer, ResponseCodeReport>();
+    private final ResponseCodeReport[] responseCodeReports = new ResponseCodeReport[1000];
 
     /**
      * {@inheritDoc}
@@ -28,7 +27,7 @@ public class ResponseCodesReportProvider extends AbstractReportProvider
     {
         final ResponseCodesReport report = new ResponseCodesReport();
 
-        report.responseCodes = new ArrayList<ResponseCodeReport>(responseCodeReports.values());
+        report.responseCodes = Arrays.asList(responseCodeReports).stream().filter(e -> e != null).collect(Collectors.toList());
 
         return report;
     }
@@ -45,14 +44,14 @@ public class ResponseCodesReportProvider extends AbstractReportProvider
 
             final int code = reqStats.getResponseCode();
 
-            ResponseCodeReport responseCodeReport = responseCodeReports.get(code);
+            ResponseCodeReport responseCodeReport = responseCodeReports[code];
             if (responseCodeReport == null)
             {
                 responseCodeReport = new ResponseCodeReport();
                 responseCodeReport.code = code;
                 responseCodeReport.statusText = getStatusText(code);
 
-                responseCodeReports.put(code, responseCodeReport);
+                responseCodeReports[code] = responseCodeReport;
             }
 
             responseCodeReport.count++;
