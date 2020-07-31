@@ -1,6 +1,8 @@
 package com.xceptance.common.collection;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Object-2-object map based on IntIntMap4a
@@ -229,4 +231,43 @@ public class FastHashMap<K, V>
         //key is not null here
         return key.hashCode() & m_mask;
     }
-}
+    
+    /**
+     * Returns all values of that map
+     * @return a list of values
+     */
+    public List<K> keys()
+    {
+        final List<K> result = new ArrayList<>();
+        
+        for (int i = 0; i < m_data.length; i = i + 2)
+        {
+            final K key = (K) m_data[i];
+            if (key != null && key != FREE_KEY && key != REMOVED_KEY)
+            {
+                result.add(key);
+            }
+        }
+        
+        return result;
+    }
+
+    /**
+     * Returns all values of that map
+     * @return a list of values
+     */
+    public List<V> values()
+    {
+        final List<V> result = new ArrayList<>();
+        
+        for (int i = 0; i < m_data.length; i = i + 2)
+        {
+            final K key = (K) m_data[i];
+            if (key != null && key != FREE_KEY && key != REMOVED_KEY)
+            {
+                result.add((V) m_data[i + 1]);
+            }
+        }
+        
+        return result;
+    }}
