@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -181,6 +182,7 @@ class DataReaderThread implements Runnable
         // System.out.printf("Reading file '%s' ...", file);
         // LOG.info(String.format("Reading file '%s' ...", file));
 
+        final boolean isCompressed = "gz".equalsIgnoreCase(file.getName().getExtension());
         final int chunkSize = dispatcher.chunkSize;
         
         // VFS has not performance impact, hence this test code can stay here for later if needed, but might
@@ -191,8 +193,9 @@ class DataReaderThread implements Runnable
 //         try (final MyBufferedReader reader = new MyBufferedReader(new InputStreamReader(new GZIPInputStream(file.getContent().getInputStream()), XltConstants.UTF8_ENCODING)))
         try (final MyBufferedReader reader = new MyBufferedReader(
                                                                   new InputStreamReader(
-                                                                      new BufferedInputStream(file.getContent().getInputStream()), 
-                                                                      XltConstants.UTF8_ENCODING)))
+                                                                      isCompressed ? 
+                                                                                  new GZIPInputStream(file.getContent().getInputStream()) : new BufferedInputStream(file.getContent().getInputStream())
+                                                                                  , XltConstants.UTF8_ENCODING)))
         {
             List<OpenStringBuilder> lines = new SimpleArrayList<>(chunkSize + 1);
             int baseLineNumber = 1;  // let line numbering start at 1
