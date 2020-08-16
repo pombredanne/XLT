@@ -194,7 +194,7 @@ class DataReaderThread implements Runnable
         try (final MyBufferedReader reader = new MyBufferedReader(
                                                                   new InputStreamReader(
                                                                       isCompressed ? 
-                                                                                  new GZIPInputStream(file.getContent().getInputStream()) : new BufferedInputStream(file.getContent().getInputStream())
+                                                                                  new GZIPInputStream(new BufferedInputStream(file.getContent().getInputStream())) : new BufferedInputStream(file.getContent().getInputStream())
                                                                                   , XltConstants.UTF8_ENCODING)))
         {
             List<OpenStringBuilder> lines = new SimpleArrayList<>(chunkSize + 1);
