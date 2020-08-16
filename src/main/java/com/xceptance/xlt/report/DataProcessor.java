@@ -16,6 +16,7 @@ import com.xceptance.common.util.concurrent.DaemonThreadFactory;
 import com.xceptance.xlt.agent.CustomSamplersRunner;
 import com.xceptance.xlt.agent.JvmResourceUsageDataGenerator;
 import com.xceptance.xlt.api.report.ReportProvider;
+import com.xceptance.xlt.api.util.XltLogger;
 import com.xceptance.xlt.engine.util.TimerUtils;
 
 /**
@@ -34,11 +35,6 @@ import com.xceptance.xlt.engine.util.TimerUtils;
  */
 public class DataProcessor
 {
-    /**
-     * Class logger.
-     */
-    private static final Log LOG = LogFactory.getLog(DataProcessor.class);
-
     /**
      * The executor dealing with the data record parser threads.
      */
@@ -139,7 +135,7 @@ public class DataProcessor
                                        new DataParserThread(dispatcher, dataRecordFactory, fromTime, toTime, config));
         }
         
-        LOG.info(String.format("Reading files from input directory '%s' ...\n", inputDir));
+        XltLogger.runTimeLogger.info(String.format("Input directory: %s", inputDir));
     }
 
     /**
@@ -169,6 +165,8 @@ public class DataProcessor
     {
         try
         {
+            dispatcher.startProgress();
+            
             final long start = TimerUtils.getTime();
 
             for (final FileObject file : inputDir.getChildren())
@@ -190,14 +188,14 @@ public class DataProcessor
             final long duration = TimerUtils.getTime() - start;
             final long linesPerSecond = Math.round((totalLinesCounter.get() / (double) duration) * 1000l); 
             
-            LOG.info(String.format("Data records read: %,d (%,d ms) - (%,d lines/s)\n", 
+            XltLogger.runTimeLogger.info(String.format("%,d records read - %,d ms - %,d lines/s", 
                               totalLinesCounter.get(), 
                               duration,
                               linesPerSecond));
         }
         catch (final Exception e)
         {
-            LOG.error("Failed to read data records", e);
+            XltLogger.runTimeLogger.error("Failed to read data records", e);
         }
         finally
         {

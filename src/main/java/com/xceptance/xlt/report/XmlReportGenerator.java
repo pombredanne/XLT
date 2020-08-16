@@ -8,13 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.converters.basic.DateConverter;
 import com.thoughtworks.xstream.io.xml.DomDriver;
 import com.xceptance.xlt.api.report.ReportCreator;
+import com.xceptance.xlt.api.util.XltLogger;
 import com.xceptance.xlt.common.XltConstants;
 
 /**
@@ -24,8 +22,6 @@ import com.xceptance.xlt.common.XltConstants;
  */
 public class XmlReportGenerator
 {
-    private static final Log LOG = LogFactory.getLog(XmlReportGenerator.class);
-
     private final List<ReportCreator> processors = new ArrayList<ReportCreator>();
 
     public void createReport(final File xmlFile) throws IOException
@@ -45,8 +41,7 @@ public class XmlReportGenerator
             }
             catch (final Throwable t)
             {
-                LOG.warn("Failed to create report fragment", t);
-                System.err.println("\nFailed to create report fragment: " + t.getMessage());
+                XltLogger.runTimeLogger.warn("Failed to create report fragment", t);
             }
         }
 

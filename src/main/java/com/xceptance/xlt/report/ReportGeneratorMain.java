@@ -19,11 +19,14 @@ import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileType;
 import org.apache.commons.vfs2.VFS;
 
+import com.xceptance.common.util.Console;
 import com.xceptance.common.util.ParseUtils;
 import com.xceptance.common.util.ProcessExitCodes;
 import com.xceptance.common.util.RegExUtils;
+import com.xceptance.xlt.api.util.XltLogger;
 import com.xceptance.xlt.common.XltConstants;
 import com.xceptance.xlt.engine.XltExecutionContext;
+import com.xceptance.xlt.util.Timer;
 
 /**
  * Command line frontend of the report generator.
@@ -45,17 +48,30 @@ public class ReportGeneratorMain
     {
         Locale.setDefault(Locale.US);
 
+        log.info(Console.horizontalBar());
+        log.info(Console.startSection("XLT Report Generation"));
+        log.info(Console.endSection());
+        
         final ReportGeneratorMain main = new ReportGeneratorMain();
 
         try
         {
+            log.info(Console.horizontalBar());
+            log.info(Console.startSection("Initalizing..."));
+            
+            final Timer timer = Timer.start();
             main.init(args);
+
+            XltLogger.runTimeLogger.info(timer.stop().get("...finished"));
+            XltLogger.runTimeLogger.info(Console.endSection());
         }
         catch (final Exception ex)
         {
             System.err.println("Failed to initialize report generator: " + ex.getMessage());
             log.fatal("Failed to initialize report generator.", ex);
+            
             main.printUsageInfo();
+            
             System.exit(ProcessExitCodes.PARAMETER_ERROR);
         }
 
@@ -63,14 +79,13 @@ public class ReportGeneratorMain
         {
             main.run();
 
-            log.info("Report generated successfully.");
-
             System.exit(ProcessExitCodes.SUCCESS);
         }
         catch (final Exception ex)
         {
             System.err.println("Failed to run report generator: " + ex.getMessage());
             log.fatal("Failed to run report generator.", ex);
+
             System.exit(ProcessExitCodes.GENERAL_ERROR);
         }
     }
@@ -388,7 +403,7 @@ public class ReportGeneratorMain
 
         XltExecutionContext.getCurrent().setTestSuiteHomeDir(new File(inputDir.getName().getPath()));
 
-        // set output directory
+        // set output directory if we got this as external parameters
         if (outputDirName != null)
         {
             outputDir = new File(outputDirName);
@@ -440,10 +455,17 @@ public class ReportGeneratorMain
      */
     public void run() throws Exception
     {
+        XltLogger.runTimeLogger.info(Console.horizontalBar());
+        XltLogger.runTimeLogger.info(Console.startSection("Setup..."));
+        
+        final Timer timer = Timer.start();
         final ReportGenerator reportGenerator = new ReportGenerator(inputDir, outputDir, noCharts, noAgentCharts, overridePropertyFile,
                                                                     commandLineProperties, testCaseIncludePatternList,
                                                                     testCaseExcludePatternList, agentIncludePatternList,
                                                                     agentExcludePatternList);
+
+        XltLogger.runTimeLogger.info(timer.stop().get("...finished"));
+        XltLogger.runTimeLogger.info(Console.endSection());
 
         reportGenerator.generateReport(fromTime, toTime, duration, noRampUp, fromTimeRel, toTimeRel);
     }
