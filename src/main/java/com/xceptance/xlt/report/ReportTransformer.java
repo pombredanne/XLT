@@ -9,6 +9,7 @@ import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 
 import com.xceptance.common.xml.XSLTUtils;
+import com.xceptance.xlt.api.util.XltLogger;
 import com.xceptance.xlt.report.util.TaskManager;
 
 /**
@@ -39,8 +40,6 @@ public class ReportTransformer
      */
     public void run(final File inputXmlFile, final File outputDir)
     {
-        System.out.printf("Transforming XML data file '%s' ...\n", inputXmlFile);
-
         for (int i = 0; i < outputFiles.size(); i++)
         {
             final File outputFile = outputFiles.get(i);

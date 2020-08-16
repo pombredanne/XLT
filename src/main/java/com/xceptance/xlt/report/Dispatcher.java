@@ -3,9 +3,6 @@ package com.xceptance.xlt.report;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import com.xceptance.common.util.SynchronizingCounter;
 import com.xceptance.xlt.report.DataParserThread.PostprocessedDataContainer;
 
@@ -23,11 +20,6 @@ import me.tongfei.progressbar.ProgressBarStyle;
  */
 public class Dispatcher
 {
-    /**
-     * Class logger.
-     */
-    private static final Log LOG = LogFactory.getLog(Dispatcher.class);
-    
     /**
      * The maximum number of lines in a chunk.
      */
@@ -66,7 +58,7 @@ public class Dispatcher
     /**
      * Our progress bar
      */
-    private final ProgressBar progressBar = new ProgressBar("Reading", 100, ProgressBarStyle.ASCII);
+    private volatile ProgressBar progressBar;
    
     /**
      * Where the processed data goes for final result evaluation
@@ -90,6 +82,11 @@ public class Dispatcher
         this.statisticsProcessor = statisticsProcessor;
     }
 
+    public void startProgress()
+    {
+        progressBar = new ProgressBar("Reading", 100, ProgressBarStyle.ASCII);
+    }
+    
     /**
      * Count the directories to be processed up by one
      */

@@ -1,11 +1,14 @@
 package com.xceptance.xlt.report;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -21,6 +24,7 @@ import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.Selectors;
 import org.apache.commons.vfs2.VFS;
 
+import com.xceptance.common.util.Console;
 import com.xceptance.common.util.ProductInformation;
 import com.xceptance.xlt.api.report.ReportProvider;
 import com.xceptance.xlt.api.util.XltLogger;
@@ -33,6 +37,7 @@ import com.xceptance.xlt.report.util.ConcurrentUsersTable;
 import com.xceptance.xlt.report.util.JFreeChartUtils;
 import com.xceptance.xlt.report.util.ReportUtils;
 import com.xceptance.xlt.report.util.TaskManager;
+import com.xceptance.xlt.util.Timer;
 import com.xceptance.xlt.util.XltPropertiesImpl;
 
 /**
@@ -88,7 +93,7 @@ public class ReportGenerator
                            final File overridePropertyFile, final Properties commandLineProperties, final String testCaseIncludePatternList,
                            final String testCaseExcludePatternList, final String agentIncludePatternList,
                            final String agentExcludePatternList)
-        throws Exception
+                               throws Exception
     {
 
         final FileObject configDir = inputDir.resolveFile(XltConstants.CONFIG_DIR_NAME);
@@ -100,7 +105,7 @@ public class ReportGenerator
         }
         catch (Exception e)
         {
-            System.err.println("\n  WARNING: One or more configuration files seem to be missing or corrupt!\n");
+            XltLogger.runTimeLogger.warn("One or more configuration files seem to be missing or corrupt!");
             props = new XltPropertiesImpl(inputDir, configDir, true);
         }
 
@@ -139,8 +144,11 @@ public class ReportGenerator
         else
         {
             this.outputDir = outputDir;
+            
         }
 
+        // clean or create it
+        ReportGenerator.ensureOutputDirAndClean(this.outputDir);
         config.setReportDirectory(this.outputDir);
 
         // configure the thread pool to be cpu count for now
@@ -166,13 +174,37 @@ public class ReportGenerator
                 final String message = String.format("Failed to instantiate and initialize report provider instance of class '%s': %s'",
                                                      c.getCanonicalName(), t.getMessage());
                 XltLogger.runTimeLogger.error(message, t);
-                System.err.println(message);
             }
         }
 
         repGen = new com.xceptance.xlt.report.external.ExternalReportGenerator();
     }
 
+    /**
+     * Ensure that output exists and is empty. We have that public here because we need it twice due to either
+     * the dir coming in from external or is determining it when creating the report. Not really nice but
+     * legacy.
+     * 
+     * @throws IOException 
+     */
+    public static void ensureOutputDirAndClean(final File dir) throws IOException
+    {
+        /*
+         * Make sure that we can safely write to output directory BEFORE reading any input data.
+         */
+        if (dir.exists() == false)
+        {
+            XltLogger.runTimeLogger.info(String.format("Creating output directory: %s", dir));
+            FileUtils.forceMkdir(dir);
+        }
+        else
+        {
+            // clean output directory first -> Improvement #3243
+            XltLogger.runTimeLogger.info(String.format("Cleaning output directory: %s", dir));
+            FileUtils.cleanDirectory(dir);
+        }
+    }
+    
     /**
      * Generates the full HTML load test report from the raw load test results. This includes
      * <ol>
@@ -218,28 +250,24 @@ public class ReportGenerator
      */
     public void generateReport(final long fromTime, final long toTime, final long duration, final boolean noRampUp,
                                final boolean fromTimeRel, final boolean toTimeRel)
-        throws Exception
+                                   throws Exception
     {
         try
         {
-            /*
-             * Make sure that we can safely write to output directory BEFORE reading any input data.
-             */
-            FileUtils.forceMkdir(outputDir);
-            // clean output directory first -> Improvement #3243
-            FileUtils.cleanDirectory(outputDir);
-
             // read all log files and crunch the data
             readLogs(fromTime, toTime, duration, noRampUp, fromTimeRel, toTimeRel);
-            
+
+            // create the xml output and the charts
             final File xmlReport = createReport(outputDir);
+            
+            // create the html report
             transformReport(xmlReport, outputDir);
 
             // output the path to the report either as file path (Win) or as clickable file URL
             final File reportFile = new File(outputDir, "index.html");
             final String reportPath = ReportUtils.toString(reportFile);
 
-            System.out.println("\nReport: " + reportPath);
+            XltLogger.runTimeLogger.info("Report: " + reportPath);
         }
         finally
         {
@@ -260,6 +288,9 @@ public class ReportGenerator
     public void readLogs(long fromTime, long toTime, final long duration, final boolean noRampUp, final boolean fromTimeRel,
                          final boolean toTimeRel)
     {
+        XltLogger.runTimeLogger.info(Console.horizontalBar());
+        XltLogger.runTimeLogger.info(Console.startSection("Reading Log Files..."));
+        
         final long testStartTime = config.getLongProperty(XltConstants.LOAD_TEST_START_DATE, 0);
         final long elapsedTime = config.getLongProperty(XltConstants.LOAD_TEST_ELAPSED_TIME, 0);
 
@@ -276,6 +307,8 @@ public class ReportGenerator
         }
 
         read(fromTime, toTime);
+        
+        XltLogger.runTimeLogger.info(Console.endSection());
     }
 
     private long[] getTimeBoundaries(long fromTime, long toTime, final long duration, final boolean noRampUp, final boolean fromTimeRel,
@@ -342,8 +375,9 @@ public class ReportGenerator
         }
         else
         {
-            System.out.printf("PLEASE NOTE: Ramp-up could not be excluded since no value could be found for property '%s'.\n",
-                              XltConstants.LOAD_TEST_START_DATE);
+            XltLogger.runTimeLogger.warn(
+                                         String.format("PLEASE NOTE: Ramp-up could not be excluded since no value could be found for property '%s'.\n",
+                                                       XltConstants.LOAD_TEST_START_DATE));
         }
 
         return fromTime;
@@ -370,6 +404,8 @@ public class ReportGenerator
                                                           agentIncludePatternList, agentExcludePatternList);
         logReader.readDataRecords();
 
+        XltLogger.runTimeLogger.info(Console.endSection());
+        
         final long minTime = logReader.getMinimumTime();
         final long maxTime = logReader.getMaximumTime();
 
@@ -380,17 +416,21 @@ public class ReportGenerator
         {
             try
             {
-                System.out.println("\nProcessing external data files ...");
+                XltLogger.runTimeLogger.info(Console.horizontalBar());
+                XltLogger.runTimeLogger.info(Console.startSection("Processing external data files..."));
 
+                final Timer timer = Timer.start();
+                
                 final File externalChartsDir = new File(config.getChartDirectory(), "external");
                 externalChartsDir.mkdirs();
                 repGen.init(minTime, maxTime, inputDir.getName().getPath(), externalChartsDir, config.shouldChartsGenerated());
                 repGen.parse();
+
+                XltLogger.runTimeLogger.info(timer.stop().get("...finished"));
             }
             catch (final Exception e)
             {
                 XltLogger.runTimeLogger.error("Failed to process external data", e);
-                System.out.println("Failed to process external data: " + e.getMessage());
             }
         }
     }
@@ -452,18 +492,18 @@ public class ReportGenerator
         // only 'from' parameter is set
         if (fromTime > 0 && toTime == Long.MAX_VALUE)
         {
-            System.out.printf("The test report will be based on results generated after '%s'.\n", new Date(fromTime));
+            XltLogger.runTimeLogger.info(String.format("Data start: %s", new Date(fromTime)));
         }
         // only 'to' parameter is set
         else if (fromTime == 0 && toTime != Long.MAX_VALUE)
         {
-            System.out.printf("The test report will be based on results generated before '%s'.\n", new Date(toTime));
+            XltLogger.runTimeLogger.info(String.format("Data end: %s", new Date(toTime)));
         }
         // both parameter are set
         else if (fromTime > 0 && toTime != Long.MAX_VALUE)
         {
-            System.out.printf("The test report will be based on results generated between '%s' and '%s'.\n", new Date(fromTime),
-                              new Date(toTime));
+            XltLogger.runTimeLogger.info(String.format("Data start: %s", new Date(fromTime)));
+            XltLogger.runTimeLogger.info(String.format("Data end  : %s", new Date(toTime)));
         }
     }
 
@@ -477,6 +517,9 @@ public class ReportGenerator
      */
     public File createReport(final File outputDir) throws Exception
     {
+        XltLogger.runTimeLogger.info(Console.horizontalBar());
+        XltLogger.runTimeLogger.info(Console.startSection("Creating Artifacts..."));
+        
         copyConfiguration(outputDir);
 
         // create the report generator
@@ -491,19 +534,27 @@ public class ReportGenerator
         }
 
         // create the report
-        System.out.println("\nCreating report artifacts ...");
-
         final long start = TimerUtils.getTime();
 
-        final File xmlReport = new File(outputDir, XltConstants.LOAD_REPORT_XML_FILENAME);
-        xmlReportGenerator.createReport(xmlReport);
+        try
+        {
+            TaskManager.getInstance().startProgress("Creating");
 
-        // wait for any asynchronous task to complete (e.g. chart generation)
-        TaskManager.getInstance().waitForAllTasksToComplete();
+            final File xmlReport = new File(outputDir, XltConstants.LOAD_REPORT_XML_FILENAME);
+            xmlReportGenerator.createReport(xmlReport);
 
-        System.out.printf("Report artifacts created successfully (%,d ms)\n\n", TimerUtils.getTime() - start);
+            return xmlReport;
+        }
+        finally
+        {
+            // wait for any asynchronous task to complete (e.g. chart generation)
+            TaskManager.getInstance().waitForAllTasksToComplete();
 
-        return xmlReport;
+            TaskManager.getInstance().stopProgress();
+
+            XltLogger.runTimeLogger.info(String.format("...finished - %,d ms", TimerUtils.getTime() - start));
+            XltLogger.runTimeLogger.info(Console.endSection());
+        }
     }
 
     /**
@@ -589,6 +640,10 @@ public class ReportGenerator
      */
     public void transformReport(final File inputXmlFile, final File outputDir) throws Exception
     {
+        XltLogger.runTimeLogger.info(Console.horizontalBar());
+        XltLogger.runTimeLogger.info(Console.startSection("Creating HTML Report..."));
+        
+        // we did this before already... mmn....
         FileUtils.forceMkdir(outputDir);
 
         // copy the report's static resources
@@ -624,12 +679,23 @@ public class ReportGenerator
 
         final long start = TimerUtils.getTime();
 
-        reportTransformer.run(inputXmlFile, outputDir);
+        try
+        {
+            XltLogger.runTimeLogger.info(String.format("XML data file: %s", inputXmlFile));
 
-        // wait for any asynchronous task to complete
-        TaskManager.getInstance().waitForAllTasksToComplete();
+            TaskManager.getInstance().startProgress("Creating");
 
-        System.out.printf("Transformation completed successfully (%,d ms)\n", TimerUtils.getTime() - start);
+            reportTransformer.run(inputXmlFile, outputDir);
+        }
+        finally
+        {
+            // wait for any asynchronous task to complete
+            TaskManager.getInstance().waitForAllTasksToComplete();
+            TaskManager.getInstance().stopProgress();
+
+            XltLogger.runTimeLogger.info(String.format("...finished - %,d ms", TimerUtils.getTime() - start));
+            XltLogger.runTimeLogger.info(Console.endSection());
+        }
     }
 
     /**
